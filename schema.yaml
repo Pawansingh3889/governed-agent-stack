@@ -1,0 +1,52 @@
+# FloorMind Schema Registry
+# ========================
+# Maps business domains to your actual database tables.
+# FloorMind uses this to know which tables to query for each type of question.
+#
+# DEFAULT: Uses the demo SQLite schema (no changes needed for demo).
+#
+# FOR YOUR SQL SERVER: Uncomment and edit the section below to map
+# your actual table and column names.
+#
+# Example for a real SQL Server ERP:
+#
+# traceability:
+#   description: Batch traceability from intake to dispatch
+#   tables:
+#     ProductionBatch: BatchID, BatchNo, ProductCode, ProductionDate, InputKg, OutputKg, WasteKg, YieldPct, LineNo
+#     RawMaterialIntake: IntakeID, ProductCode, BatchNo, SupplierCode, QuantityKg, IntakeDate, ExpiryDate, TempOnArrival
+#     Products: ProductCode, ProductName, Species, Category, CostPerKg, SellPricePerKg, Allergens
+#     SalesOrders: OrderID, CustomerCode, ProductCode, QuantityKg, OrderDate, DeliveryDate, Status, PricePerKg
+#     Customers: CustomerCode, CustomerName
+#
+# production:
+#   description: Production runs and waste
+#   tables:
+#     ProductionBatch: BatchID, BatchNo, ProductCode, ProductionDate, InputKg, OutputKg, WasteKg, YieldPct, LineNo, Shift, OperatorName
+#     Products: ProductCode, ProductName, Species, Category, CostPerKg
+#     WasteRecords: WasteID, BatchID, WasteType, QuantityKg, Reason, WasteDate
+#
+# orders:
+#   description: Customer orders
+#   tables:
+#     SalesOrders: OrderID, CustomerCode, ProductCode, QuantityKg, OrderDate, DeliveryDate, Status, PricePerKg
+#     Customers: CustomerCode, CustomerName
+#     Products: ProductCode, ProductName
+#
+# Note: temperature monitoring is intentionally not an FloorMind query domain.
+# In BRC-audited operations, temperature monitoring is a formal closed loop
+# (calibrated probes -> SCADA -> automated log -> QA sign-off). Routing
+# temperature questions through an LLM would let operators bypass the audit
+# trail. Use the compliance dashboard for temperature; FloorMind for batch
+# traceability that happens to include temp_on_arrival columns.
+#
+# staff:
+#   description: Staff and overtime
+#   tables:
+#     Employees: EmployeeID, FullName, Role, ShiftPattern, WeeklyHours, HourlyRate
+#
+# stock:
+#   description: Stock levels and expiry
+#   tables:
+#     RawMaterialIntake: IntakeID, ProductCode, BatchNo, SupplierCode, QuantityKg, IntakeDate, ExpiryDate
+#     Products: ProductCode, ProductName, Species
