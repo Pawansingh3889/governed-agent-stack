@@ -116,10 +116,15 @@ def validate_sql_node(state: AgentState) -> AgentState:
         log.warning("SQL validation warnings: %s", result.warnings)
 
     if not result.is_valid:
-        log_validation(passed=False, warnings=result.warnings, error=result.error_message)
+        log_validation(
+            passed=False,
+            warnings=result.warnings,
+            error=result.error_message,
+            lint_findings=result.lint_warnings,
+        )
         return {"error": result.error_message}
 
-    log_validation(passed=True, warnings=result.warnings)
+    log_validation(passed=True, warnings=result.warnings, lint_findings=result.lint_warnings)
     # Use the (possibly amended) SQL with row-limit enforced
     return {"sql": result.sql}
 

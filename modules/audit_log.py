@@ -29,11 +29,84 @@ AUDIT_FILE = LOG_DIR / "audit.jsonl"
 
 log = logging.getLogger("audit")
 
+# --- Tamper-evident ledger (Governed Agent Stack: agent-blackbox) -----------
+# When agent-blackbox is installed, every audited event is also mirrored into an
+# append-only, hash-chained ledger, so the record can be verified later and any
+# edit after the fact is detectable. On by default to logs/blackbox.db when
+# agent-blackbox is importable; set FLOORMIND_BLACKBOX=0 to turn it off, or set
+# FLOORMIND_BLACKBOX_DB to choose the path. A no-op if agent-blackbox is absent.
+
+_OFF = {"0", "false", "no", "off"}
+_ledger = None
+_ledger_resolved = False
+
+
+def _get_ledger():
+    """Return a cached agent-blackbox Ledger, or None if off / unavailable."""
+    global _ledger, _ledger_resolved
+    if _ledger_resolved:
+        return _ledger
+    _ledger_resolved = True
+
+    path = os.getenv("FLOORMIND_BLACKBOX_DB")
+    if path is None:
+        if os.getenv("FLOORMIND_BLACKBOX", "1").strip().lower() in _OFF:
+            return None
+        path = str(LOG_DIR / "blackbox.db")
+    if not path:
+        return None
+
+    try:
+        from agent_blackbox import Ledger
+    except ImportError:
+        return None
+
+    try:
+        if os.getenv("FLOORMIND_BLACKBOX_HASH") == "1":
+            try:
+                _ledger = Ledger(path, hash_payload=True)
+            except TypeError:
+                _ledger = Ledger(path)
+        else:
+            _ledger = Ledger(path)
+    except Exception as e:  # ledger init must never break the agent
+        log.warning("agent-blackbox unavailable: %s", e)
+        _ledger = None
+    return _ledger
+
+
+def _record_ledger(event_type: str, fields: dict[str, Any]) -> None:
+    """Mirror one event into the tamper-evident ledger. Never raises."""
+    led = _get_ledger()
+    if led is None:
+        return
+    if fields.get("error"):
+        outcome = "error"
+    elif fields.get("passed") is False:
+        outcome = "blocked"
+    else:
+        outcome = "ok"
+    payload = fields.get("sql") or fields.get("question") or ""
+    meta = {k: v for k, v in fields.items() if k not in ("sql", "question")}
+    try:
+        led.record(
+            "FloorMind",
+            event_type,
+            target=str(fields.get("domain") or fields.get("model") or ""),
+            payload=str(payload)[:2000],
+            outcome=outcome,
+            meta=meta,
+        )
+    except Exception as e:  # an audit failure must not take down the agent
+        log.warning("agent-blackbox record failed: %s", e)
+
 
 def log_event(event_type: str, **fields: Any) -> None:
     """Append a structured event to the audit log.
 
-    Failures are logged but never raise — auditing must not block the agent.
+    Writes the JSONL line and, when agent-blackbox is enabled, mirrors the
+    event into a hash-chained ledger. Failures are logged but never raise:
+    auditing must not block the agent.
     """
     entry: dict[str, Any] = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -45,6 +118,8 @@ def log_event(event_type: str, **fields: Any) -> None:
             f.write(json.dumps(entry, default=str) + "\n")
     except OSError as e:
         log.warning("Audit log write failed: %s", e)
+
+    _record_ledger(event_type, fields)
 
 
 def log_question(question: str, user: str | None = None) -> None:
@@ -60,13 +135,19 @@ def log_sql_generated(sql: str, domain: str, source: str) -> None:
     log_event("sql_generated", sql=sql[:1000], domain=domain, source=source)
 
 
-def log_validation(passed: bool, warnings: list[str] | None = None, error: str | None = None) -> None:
-    """Log SQL validation result (5-stage pipeline outcome)."""
+def log_validation(
+    passed: bool,
+    warnings: list[str] | None = None,
+    error: str | None = None,
+    lint_findings: list[str] | None = None,
+) -> None:
+    """Log SQL validation result (statement, injection, schema, sql-sop lint)."""
     log_event(
         "sql_validated",
         passed=passed,
         warnings=warnings or [],
         error=error,
+        lint=lint_findings or [],
     )
 
 

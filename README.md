@@ -63,7 +63,7 @@ Factory managers and shift leads need answers from production data: yield, waste
 The 2026 agentic-AI reports (McKinsey, Deloitte, and others) keep landing on the same point: enterprises don't lack agents, they lack **governed** ones. Only about one in five has mature oversight, and most projects stall on data foundations and governance, not the model. The shift they describe is from *approving tools* to *commissioning, onboarding, and governing agents like digital employees*: scoped, supervised, and accountable. FloorMind is built that way:
 
 - **read-only** by default: only `SELECT`/`WITH`; writes blocked
-- every query **validated and audit-logged** (`logs/audit.jsonl`) for traceability
+- every query **linted by sql-sop and audit-logged** for traceability, with a tamper-evident `agent-blackbox` ledger when installed
 - **scoped** away from questions it shouldn't answer (real-time temperature stays with the certified monitoring loop)
 - **measured** by an eval harness, not vibes
 - **on-prem**: nothing leaves the network
@@ -260,6 +260,8 @@ jq -r 'select(.event == "question_asked") | .timestamp[:10]' logs/audit.jsonl | 
 
 Events logged: `question_asked`, `sql_generated`, `sql_validated`, `sql_executed`, `llm_call`.
 
+When [agent-blackbox](https://github.com/Pawansingh3889/agent-blackbox) is installed, every event is also mirrored into an append-only, hash-chained ledger at `logs/blackbox.db`, so the record is tamper-evident: any edit after the fact breaks the chain and `agent-blackbox verify` points straight at it. Set `FLOORMIND_BLACKBOX=0` to turn it off, or `FLOORMIND_BLACKBOX_DB` to choose the path.
+
 Required for BRC traceability: every query, who asked, what SQL ran, what came back.
 
 ---
@@ -381,7 +383,7 @@ FloorMind will automatically create the `documents` table and the pgvector exten
 | LLM | Ollama (Gemma 3 12B) | English to SQL, result explanation |
 | Agent | LangGraph (6-node state graph) | Structured NL-to-SQL pipeline with conditional routing |
 | MCP Servers | FastMCP (database + doc search) | Decoupled tool servers via Model Context Protocol |
-| SQL Validation | sqlparse + custom validator | Injection detection, schema checks, row limits |
+| SQL Validation | sqlparse + custom validator + sql-sop | Injection detection, schema checks, row limits, static lint |
 | Database | SQLAlchemy | SQLite (demo) + SQL Server (production) |
 | Vector Search | ChromaDB or PostgreSQL+pgvector | PDF and SOP search (RAG) |
 | Domain Docs | Runtime-loaded markdown | Compliance, production, waste rules injected into LLM context |

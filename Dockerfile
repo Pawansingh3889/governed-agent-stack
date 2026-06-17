@@ -5,6 +5,7 @@ WORKDIR /app
 # System deps for psycopg2, pyodbc, and ODBC drivers
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
+    git \
     libpq-dev \
     unixodbc-dev \
     curl \

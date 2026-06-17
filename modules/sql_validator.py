@@ -15,6 +15,7 @@ from sqlparse.sql import Identifier, IdentifierList
 from sqlparse.tokens import Keyword
 
 from config import DB_TYPE, SQL_MAX_ROWS
+from modules.sop_lint import lint as sop_lint
 
 # ---------------------------------------------------------------------------
 # Validation result
@@ -28,6 +29,9 @@ class ValidationResult:
     sql: str
     errors: List[str] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
+    # Advisory sql-sop findings, kept separate from user-facing warnings so
+    # callers can log them for governance without showing noise to the user.
+    lint_warnings: List[str] = field(default_factory=list)
 
     def __bool__(self) -> bool:
         return self.is_valid
@@ -307,9 +311,23 @@ def validate_sql(
     # 5. Enforce row limit
     amended_sql = _enforce_row_limit(sql, max_rows)
 
+    # 6. sql-sop static lint (Governed Agent Stack: static SQL safety layer).
+    #    Error-severity findings block; advisory warnings are returned in
+    #    lint_warnings, separate from the user-facing warnings.
+    sop = sop_lint(amended_sql)
+    if sop.errors:
+        return ValidationResult(
+            is_valid=False,
+            sql=amended_sql,
+            errors=sop.errors,
+            warnings=all_warnings,
+            lint_warnings=sop.warnings,
+        )
+
     return ValidationResult(
         is_valid=True,
         sql=amended_sql,
         errors=[],
         warnings=all_warnings,
+        lint_warnings=sop.warnings,
     )

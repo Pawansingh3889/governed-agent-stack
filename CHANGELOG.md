@@ -11,6 +11,17 @@ cut (none today; see `GOVERNANCE.md` § Release cadence for the rule).
 
 ### Added
 
+- **Governed Agent Stack wiring: sql-sop + agent-blackbox.** Generated SQL is
+  now linted by [sql-sop](https://github.com/Pawansingh3889/sql-guard) before it
+  runs (error-severity findings block the query; advisories are recorded, not
+  shown to the user), and every audit event is mirrored into a tamper-evident,
+  hash-chained [agent-blackbox](https://github.com/Pawansingh3889/agent-blackbox)
+  ledger at `logs/blackbox.db` (on by default when installed; set
+  `FLOORMIND_BLACKBOX=0` to disable, or `FLOORMIND_BLACKBOX_DB` to choose the
+  path). Wired into both the live `sql_agent` path and the LangGraph
+  `agent_graph` path, so the stack diagram is true at runtime. New tests in
+  `tests/unit/test_sop_lint.py` and `tests/unit/test_audit_blackbox.py`.
+
 - **Root-cause *scaffolding* (`modules/rca.py`).** Fuses the two
   existing systems — production data + the document RAG — into an
   evidence packet for an anomaly (yield drop today). It (1) ranks
