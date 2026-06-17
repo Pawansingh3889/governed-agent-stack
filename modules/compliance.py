@@ -59,7 +59,7 @@ def get_temperature_excursions(days=7):
 
 def get_allergen_matrix():
     """Generate allergen matrix for all products."""
-    df = query("SELECT name, species, category, allergens FROM products ORDER BY name")
+    df = query("SELECT name, product_type, category, allergens FROM products ORDER BY name")
 
     all_allergens = set()
     for row in df['allergens']:

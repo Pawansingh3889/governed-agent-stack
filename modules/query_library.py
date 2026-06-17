@@ -221,9 +221,9 @@ QUERY_LIBRARY = [
         "sql": lambda: """
             SELECT r.run_number, r.production_date,
                    pp.description as product, pp.customer,
-                   t.batch_code, t.supplier, t.species,
-                   t.catch_area, t.catch_method, t.vessel_name,
-                   t.landing_date, t.country_origin, t.certified
+                   t.batch_code, t.supplier, t.product_type,
+                   t.source_region, t.source_method, t.source_ref,
+                   t.sourced_date, t.country_origin, t.certified
             FROM prod_runs r
             JOIN prod_products pp ON r.product_code = pp.product_code
             JOIN prod_traceability t ON r.trace_id = t.trace_id
@@ -321,8 +321,8 @@ QUERY_LIBRARY = [
         ],
         "sql": lambda: """
             SELECT t.trace_id, t.batch_code, t.supplier,
-                   t.species, t.catch_area, t.certified,
-                   t.country_origin, t.vessel_name
+                   t.product_type, t.source_region, t.certified,
+                   t.country_origin, t.source_ref
             FROM prod_traceability t
             ORDER BY t.received_date DESC
         """,

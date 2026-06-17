@@ -26,7 +26,7 @@ def seed():
         CREATE TABLE products (
             id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
-            species TEXT,
+            product_type TEXT,
             category TEXT,
             unit_cost_per_kg REAL,
             sell_price_per_kg REAL,
@@ -130,7 +130,7 @@ def seed():
             product_code TEXT PRIMARY KEY,
             description TEXT NOT NULL,
             category TEXT,
-            species TEXT,
+            product_type TEXT,
             customer TEXT,
             pack_size_g REAL,
             shelf_life_days INTEGER,
@@ -143,12 +143,12 @@ def seed():
             trace_id TEXT PRIMARY KEY,
             batch_code TEXT NOT NULL,
             supplier TEXT,
-            species TEXT,
-            catch_area TEXT,
-            catch_method TEXT,
-            vessel_name TEXT,
-            landing_date TEXT,
-            kill_date TEXT,
+            product_type TEXT,
+            source_region TEXT,
+            source_method TEXT,
+            source_ref TEXT,
+            sourced_date TEXT,
+            processed_date TEXT,
             received_date TEXT,
             received_temp_c REAL,
             use_by_date TEXT,
@@ -173,7 +173,7 @@ def seed():
             yield_pct REAL,
             status TEXT DEFAULT 'active',
             complete INTEGER DEFAULT 0,
-            kill_date TEXT,
+            processed_date TEXT,
             trace_id TEXT,
             created_by TEXT,
             created_date TEXT,
@@ -446,7 +446,7 @@ def seed():
         ('PRD-G-500', 'Product G Selection 500g', 'mixed', 'mixed', 'Retail B', 500, 4, 'wheat, soy'),
     ]
     for pp in prod_products:
-        c.execute('INSERT INTO prod_products (product_code, description, category, species, customer, pack_size_g, shelf_life_days, allergens) VALUES (?,?,?,?,?,?,?,?)', pp)
+        c.execute('INSERT INTO prod_products (product_code, description, category, product_type, customer, pack_size_g, shelf_life_days, allergens) VALUES (?,?,?,?,?,?,?,?)', pp)
 
     # Traceability batches
     trace_data = [
@@ -458,7 +458,7 @@ def seed():
         ('TR-0406', 'BC-0006', 'Supplier J', 'Type 4', 'Region 5', 'Method B', None, '2025-02-15', '2025-02-15', '2025-03-20', -18.0, '2025-08-15', 'Region Y', 'Cert B'),
     ]
     for t in trace_data:
-        c.execute('INSERT INTO prod_traceability (trace_id, batch_code, supplier, species, catch_area, catch_method, vessel_name, landing_date, kill_date, received_date, received_temp_c, use_by_date, country_origin, certified) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', t)
+        c.execute('INSERT INTO prod_traceability (trace_id, batch_code, supplier, product_type, source_region, source_method, source_ref, sourced_date, processed_date, received_date, received_temp_c, use_by_date, country_origin, certified) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', t)
 
     # Production runs (30 days of data)
     run_operators = ['STAYLOR', 'MBROWN', 'PPATEL', 'AGREEN', 'DMILLER']
@@ -484,7 +484,7 @@ def seed():
             c.execute('''INSERT INTO prod_runs
                 (run_number, production_date, shift_code, shift_date, prod_line,
                  product_code, spec, prog_id, target_qty_kg, actual_qty_kg,
-                 waste_kg, yield_pct, status, complete, kill_date, trace_id,
+                 waste_kg, yield_pct, status, complete, processed_date, trace_id,
                  created_by, created_date)
                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
                 (run_num, date_str, shift, date_str, line[0],

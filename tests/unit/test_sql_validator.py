@@ -173,7 +173,7 @@ class TestTableExistence:
 class TestColumnResolution:
     @staticmethod
     def _resolver(table: str) -> list[str]:
-        return {"products": ["id", "name", "species"]}.get(table, [])
+        return {"products": ["id", "name", "product_type"]}.get(table, [])
 
     def test_unknown_column_produces_warning_not_error(self) -> None:
         result = validate_sql(

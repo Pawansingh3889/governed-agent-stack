@@ -158,7 +158,7 @@ def get_schema_for_domain(domain: str) -> str:
         Example::
 
             {
-              "products": "id, name, species, unit_cost_per_kg, ...",
+              "products": "id, name, product_type, unit_cost_per_kg, ...",
               "production": "id, product_id, batch_code, date, ..."
             }
 

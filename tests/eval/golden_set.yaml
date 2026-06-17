@@ -95,8 +95,8 @@ samples:
     # Matches the exact string in query_library.py (colon, no em-dash).
     expected_pattern_description: "Traceability chain: run to source"
     expected_columns:
-      [run_number, production_date, product, customer, batch_code, supplier, species,
-       catch_area, catch_method, vessel_name, landing_date, country_origin, certified]
+      [run_number, production_date, product, customer, batch_code, supplier, product_type,
+       source_region, source_method, source_ref, sourced_date, country_origin, certified]
 
   - id: q13
     question: shift productivity day vs night

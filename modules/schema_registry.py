@@ -18,7 +18,7 @@ DEFAULT_SCHEMA = {
     "traceability": {
         "description": "Batch traceability from raw material to customer",
         "tables": {
-            "products": "id, name, species, category, unit_cost_per_kg, sell_price_per_kg, allergens",
+            "products": "id, name, product_type, category, unit_cost_per_kg, sell_price_per_kg, allergens",
             "raw_materials": "id, product_id, batch_code, supplier, quantity_kg, received_date, expiry_date, temperature_on_arrival",
             "production": "id, product_id, batch_code, date, raw_input_kg, finished_output_kg, waste_kg, yield_pct, line_number, shift, operator",
             "orders": "id, customer, product_id, quantity_kg, order_date, delivery_date, status, price_per_kg",
@@ -27,7 +27,7 @@ DEFAULT_SCHEMA = {
     "production": {
         "description": "Production output, yield, and waste",
         "tables": {
-            "products": "id, name, species, category, unit_cost_per_kg, sell_price_per_kg",
+            "products": "id, name, product_type, category, unit_cost_per_kg, sell_price_per_kg",
             "production": "id, product_id, batch_code, date, raw_input_kg, finished_output_kg, waste_kg, yield_pct, line_number, shift, operator",
             "waste_log": "id, production_id, waste_type, quantity_kg, reason, date",
         },
@@ -35,7 +35,7 @@ DEFAULT_SCHEMA = {
     "orders": {
         "description": "Customer orders and delivery",
         "tables": {
-            "products": "id, name, species, category, sell_price_per_kg",
+            "products": "id, name, product_type, category, sell_price_per_kg",
             "orders": "id, customer, product_id, quantity_kg, order_date, delivery_date, status, price_per_kg",
         },
     },
@@ -48,7 +48,7 @@ DEFAULT_SCHEMA = {
     "stock": {
         "description": "Raw material stock and expiry",
         "tables": {
-            "products": "id, name, species",
+            "products": "id, name, product_type",
             "raw_materials": "id, product_id, batch_code, supplier, quantity_kg, received_date, expiry_date",
         },
     },
@@ -58,8 +58,8 @@ DEFAULT_SCHEMA = {
             "products": "id, name, allergens",
             "temp_logs": "id, location, temperature, recorded_at, recorded_by",
             "production": "id, product_id, batch_code, date",
-            "prod_products": "product_code, description, species, customer, allergens, hazard_class",
-            "prod_traceability": "trace_id, batch_code, supplier, species, catch_area, vessel_name, certified, country_origin",
+            "prod_products": "product_code, description, product_type, customer, allergens, hazard_class",
+            "prod_traceability": "trace_id, batch_code, supplier, product_type, source_region, source_ref, certified, country_origin",
             "prod_temperature_logs": "log_id, location, reading_time, temp_celsius, target_min, target_max, in_range, recorded_by",
             "prod_non_conformance": "nc_id, nc_date, run_number, product_code, nc_type, severity, description, root_cause, corrective_action, status",
             "prod_case_verification": "verify_id, run_number, expected_plu, scanned_plu, match, scan_time",
@@ -69,13 +69,13 @@ DEFAULT_SCHEMA = {
 
 # Production ERP tables — extend existing domains
 DEFAULT_SCHEMA["traceability"]["tables"].update({
-    "prod_runs": "run_number, production_date, product_code, trace_id, kill_date, status, created_by",
-    "prod_products": "product_code, description, species, customer, allergens",
-    "prod_traceability": "trace_id, batch_code, supplier, species, catch_area, catch_method, vessel_name, landing_date, kill_date, received_date, received_temp_c, use_by_date, country_origin, certified",
+    "prod_runs": "run_number, production_date, product_code, trace_id, processed_date, status, created_by",
+    "prod_products": "product_code, description, product_type, customer, allergens",
+    "prod_traceability": "trace_id, batch_code, supplier, product_type, source_region, source_method, source_ref, sourced_date, processed_date, received_date, received_temp_c, use_by_date, country_origin, certified",
 })
 DEFAULT_SCHEMA["production"]["tables"].update({
     "prod_lines": "line_id, line_name, line_type, area, max_capacity_kg",
-    "prod_products": "product_code, description, category, species, customer, pack_size_g",
+    "prod_products": "product_code, description, category, product_type, customer, pack_size_g",
     "prod_runs": "run_number, production_date, shift_code, prod_line, product_code, target_qty_kg, actual_qty_kg, waste_kg, yield_pct, status, trace_id, created_by",
     "prod_transactions": "trans_id, run_number, weight_g, target_weight_g, tare_g, net_weight_g, overweight_g, prod_line",
     "prod_run_totals": "run_number, total_packs, total_weight_kg, avg_weight_g, giveaway_kg, giveaway_pct, reject_count, downtime_mins",
@@ -83,13 +83,13 @@ DEFAULT_SCHEMA["production"]["tables"].update({
 })
 DEFAULT_SCHEMA["orders"]["tables"].update({
     "prod_despatch": "despatch_id, order_number, customer, product_code, qty_cases, qty_kg, despatch_date, delivery_date, vehicle_temp_c, status",
-    "prod_products": "product_code, description, species, customer",
+    "prod_products": "product_code, description, product_type, customer",
 })
 DEFAULT_SCHEMA["staff"]["tables"].update({
     "prod_shifts": "shift_id, shift_date, shift_code, line_id, headcount, planned_hours, actual_hours, overtime_hours, output_kg, kg_per_head",
 })
 DEFAULT_SCHEMA["stock"]["tables"].update({
-    "prod_traceability": "trace_id, batch_code, supplier, species, received_date, use_by_date, country_origin, certified",
+    "prod_traceability": "trace_id, batch_code, supplier, product_type, received_date, use_by_date, country_origin, certified",
 })
 
 # Keywords that map questions to domains

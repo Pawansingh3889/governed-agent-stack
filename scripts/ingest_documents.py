@@ -84,7 +84,7 @@ Document Number: SOP-AL-001
 PURPOSE: To prevent allergen cross-contamination and ensure accurate labelling.
 
 ALLERGENS PRESENT ON SITE:
-- Fish (all species)
+- Fish (all product_type)
 - Crustaceans (prawns, crab)
 - Molluscs (mussels, squid)
 - Wheat (in breaded products)
