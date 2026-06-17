@@ -39,7 +39,7 @@ from modules import rca  # noqa: E402
 
 class TestAuditBoundary:
     def test_fresh_scaffold_is_not_an_actionable_record(self) -> None:
-        s = rca.RcaScaffold(effect="yield drop on Salmon", metric="yield_pct", window_days=30)
+        s = rca.RcaScaffold(effect="yield drop on Product A", metric="yield_pct", window_days=30)
         assert s.owner is None
         assert s.verified_by is None
         assert s.is_actionable_record is False
@@ -132,8 +132,8 @@ class TestCorrelateYieldDrop:
 
 class TestBuildScaffold:
     def test_assembles_all_evidence_layers(self) -> None:
-        s = rca.build_scaffold("yield drop on Salmon", window_days=3650)
-        assert s.effect == "yield drop on Salmon"
+        s = rca.build_scaffold("yield drop on Product A", window_days=3650)
+        assert s.effect == "yield drop on Product A"
         assert isinstance(s.candidate_factors, list)
         assert len(s.five_whys) == 5
         assert isinstance(s.corrective_action_docs, list)  # [] if no docs ingested

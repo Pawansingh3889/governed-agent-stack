@@ -39,7 +39,7 @@ _HAS_STREAMLIT = importlib.util.find_spec("streamlit") is not None
 @pytest.mark.parametrize(
     ("question", "expected_domain"),
     [
-        ("trace batch BC-0001 back to the vessel",                "traceability"),
+        ("trace batch BC-0001 back to source",                    "traceability"),
         ("what was our yield this week",                          "production"),
         ("any pending orders for Customer A",                     "orders"),
         ("who worked overtime this week",                         "staff"),

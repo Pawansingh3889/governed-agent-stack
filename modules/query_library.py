@@ -214,9 +214,9 @@ QUERY_LIBRARY = [
     {
         "patterns": [
             r"trace.*(batch|BC-)",
-            r"where.*(fish|cod|salmon|haddock).*(come|from|origin)",
+            r"where.*(product|batch|material).*(come|from|origin)",
             r"(batch|trace).*lookup",
-            r"(vessel|catch area|supplier).*batch",
+            r"(source|supplier).*batch",
         ],
         "sql": lambda: """
             SELECT r.run_number, r.production_date,
@@ -230,7 +230,7 @@ QUERY_LIBRARY = [
             ORDER BY r.production_date DESC
             LIMIT 20
         """,
-        "description": "Traceability chain: run to catch vessel",
+        "description": "Traceability chain: run to source",
     },
     {
         "patterns": [
@@ -315,8 +315,8 @@ QUERY_LIBRARY = [
     },
     {
         "patterns": [
-            r"(MSC|ASC).*(certified|certification|status)",
-            r"sustainable.*(fish|source)",
+            r"certification.*(status|batch|supplier)",
+            r"sustainable.*(product|source)",
             r"certified.*(batch|supplier)",
         ],
         "sql": lambda: """
@@ -326,7 +326,7 @@ QUERY_LIBRARY = [
             FROM prod_traceability t
             ORDER BY t.received_date DESC
         """,
-        "description": "MSC/ASC certification status by batch",
+        "description": "Certification status by batch",
     },
 ]
 

@@ -175,7 +175,7 @@ class TestCompliance:
         df = get_allergen_matrix()
         assert not df.empty
         assert "name" in df.columns
-        assert "Fish" in df.columns
+        assert "Wheat" in df.columns
 
     def test_compliance_score(self):
         from modules.compliance import get_compliance_score
@@ -241,7 +241,7 @@ class TestWastePredictor:
 
     def test_predict_waste(self):
         from modules.waste_predictor import predict_waste
-        result = predict_waste("Salmon", 500)
+        result = predict_waste("Product A", 500)
         if result:
             assert "expected_output_kg" in result
             assert "expected_waste_kg" in result

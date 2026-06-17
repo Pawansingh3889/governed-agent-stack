@@ -1,4 +1,4 @@
-"""Create a realistic demo database for a fish processing factory."""
+"""Create a realistic demo database for a food manufacturing factory."""
 import os
 import random
 import sqlite3
@@ -282,16 +282,16 @@ def seed():
 
     # === PRODUCTS ===
     products = [
-        (1, 'Atlantic Salmon Fillet', 'Salmon', 'fresh_fillet', 8.50, 14.20, 'Fish'),
-        (2, 'Cod Fillet', 'Cod', 'fresh_fillet', 7.20, 12.50, 'Fish'),
-        (3, 'Haddock Fillet', 'Haddock', 'fresh_fillet', 6.80, 11.90, 'Fish'),
-        (4, 'Smoked Salmon', 'Salmon', 'smoked', 12.00, 22.50, 'Fish'),
-        (5, 'Breaded Cod', 'Cod', 'breaded', 5.50, 9.80, 'Fish, Wheat, Egg'),
-        (6, 'Fish Pie Mix', 'Mixed', 'value_added', 4.20, 7.50, 'Fish, Milk'),
-        (7, 'Prawn Ring', 'Prawn', 'value_added', 6.00, 11.00, 'Crustaceans'),
-        (8, 'Smoked Haddock', 'Haddock', 'smoked', 9.50, 16.80, 'Fish'),
-        (9, 'Sea Bass Fillet', 'Sea Bass', 'fresh_fillet', 11.00, 18.50, 'Fish'),
-        (10, 'Salmon Portions 140g', 'Salmon', 'portions', 9.00, 15.50, 'Fish'),
+        (1, 'Product A', 'Type 1', 'standard', 8.50, 14.20, 'None'),
+        (2, 'Product B', 'Type 1', 'standard', 7.20, 12.50, 'None'),
+        (3, 'Product C', 'Type 1', 'standard', 6.80, 11.90, 'None'),
+        (4, 'Product D', 'Type 2', 'premium', 12.00, 22.50, 'None'),
+        (5, 'Product E', 'Type 1', 'coated', 5.50, 9.80, 'Wheat, Egg'),
+        (6, 'Product F', 'Type 3', 'value_added', 4.20, 7.50, 'Milk'),
+        (7, 'Product G', 'Type 4', 'value_added', 6.00, 11.00, 'Soy'),
+        (8, 'Product H', 'Type 1', 'premium', 9.50, 16.80, 'None'),
+        (9, 'Product I', 'Type 1', 'standard', 11.00, 18.50, 'None'),
+        (10, 'Product J', 'Type 1', 'portions', 9.00, 15.50, 'None'),
     ]
     c.executemany('INSERT INTO products VALUES (?,?,?,?,?,?,?)', products)
 
@@ -349,7 +349,7 @@ def seed():
             raw_kg = round(random.uniform(100, 800), 1)
 
             # Yield varies by product type with realistic variation
-            base_yield = {'fresh_fillet': 0.62, 'smoked': 0.55, 'breaded': 0.72,
+            base_yield = {'standard': 0.62, 'premium': 0.55, 'coated': 0.72,
                          'value_added': 0.68, 'portions': 0.65}
             avg_yield = base_yield.get(prod[3], 0.65)
             # Add realistic variation (+/- 8%)
@@ -370,7 +370,7 @@ def seed():
 
             # Waste log entry
             waste_id += 1
-            waste_types = ['Trim', 'Skin', 'Bones', 'Rejected', 'Overproduction', 'Damaged']
+            waste_types = ['Trim', 'Offcut', 'Reject', 'Rejected', 'Overproduction', 'Damaged']
             waste_reasons = ['Normal processing', 'Quality rejection', 'Size spec failure',
                            'Temperature excursion', 'Overproduction', 'Equipment issue',
                            'Late delivery', 'Customer cancellation']
@@ -411,8 +411,8 @@ def seed():
         (2, 'BRC_Audit_Report_2024.pdf', 'Audit', today.strftime('%Y-%m-%d'), 'BRC Global Standard for Food Safety audit report'),
         (3, 'SOP_Cold_Room_Temperature.pdf', 'SOP', today.strftime('%Y-%m-%d'), 'Standard operating procedure for cold room temperature monitoring'),
         (4, 'SOP_Allergen_Management.pdf', 'SOP', today.strftime('%Y-%m-%d'), 'Allergen management and labelling procedures'),
-        (5, 'Customer A_Product_Spec_Salmon.pdf', 'Customer Spec', today.strftime('%Y-%m-%d'), 'Customer A product specification for salmon fillets'),
-        (6, 'Iceland_Product_Spec_Cod.pdf', 'Customer Spec', today.strftime('%Y-%m-%d'), 'Iceland product specification for breaded cod'),
+        (5, 'Customer A_Product_Spec.pdf', 'Customer Spec', today.strftime('%Y-%m-%d'), 'Customer A product specification'),
+        (6, 'Customer B_Product_Spec.pdf', 'Customer Spec', today.strftime('%Y-%m-%d'), 'Customer B product specification'),
         (7, 'Staff_Handbook_2024.pdf', 'HR', today.strftime('%Y-%m-%d'), 'Employee handbook with health and safety procedures'),
         (8, 'Cleaning_Schedule.pdf', 'SOP', today.strftime('%Y-%m-%d'), 'Daily and weekly cleaning schedule for all areas'),
     ]
@@ -422,10 +422,10 @@ def seed():
 
     # Production lines
     prod_lines = [
-        (1, 'Line 1', 'filleting', 'fresh', 5000),
-        (2, 'Line 2', 'filleting', 'fresh', 4500),
+        (1, 'Line 1', 'processing', 'fresh', 5000),
+        (2, 'Line 2', 'processing', 'fresh', 4500),
         (3, 'Line 3', 'packing', 'fresh', 6000),
-        (4, 'Smoke Line', 'smoking', 'smoked', 2000),
+        (4, 'Line 4', 'processing', 'standard', 2000),
         (5, 'VA Line', 'value-added', 'value-added', 3000),
         (6, 'Packing A', 'packing', 'fresh', 5500),
     ]
@@ -434,28 +434,28 @@ def seed():
 
     # Production products (PLU)
     prod_products = [
-        ('COD-200-R01', 'Cod Fillet Skinless 200g', 'fillet', 'cod', 'Retail A', 200, 7, 'fish'),
-        ('COD-280-R02', 'Cod Loin 280g', 'loin', 'cod', 'Retail B', 280, 7, 'fish'),
-        ('SAL-130-R01', 'Salmon Fillet Portion 130g', 'fillet', 'salmon', 'Retail A', 130, 7, 'fish'),
-        ('SAL-200-R03', 'Salmon Darnes 200g', 'portion', 'salmon', 'Retail C', 200, 6, 'fish'),
-        ('HAD-170-R02', 'Smoked Haddock Fillet 170g', 'smoked', 'haddock', 'Retail B', 170, 10, 'fish'),
-        ('MAC-150-R01', 'Mackerel Fillet Peppered 150g', 'smoked', 'mackerel', 'Retail A', 150, 14, 'fish, mustard'),
-        ('FCA-300-R02', 'Fish Cakes Cod & Parsley 300g', 'value-add', 'cod', 'Retail B', 300, 5, 'fish, wheat, egg'),
-        ('FCA-400-R03', 'Fish Cakes Premium 400g', 'value-add', 'cod', 'Retail C', 400, 5, 'fish, wheat, egg, milk'),
-        ('PRN-200-R01', 'King Prawns 200g', 'shellfish', 'prawn', 'Retail A', 200, 5, 'crustaceans'),
-        ('SEA-500-R02', 'Seafood Selection 500g', 'mixed', 'mixed', 'Retail B', 500, 4, 'fish, crustaceans, molluscs'),
+        ('PRD-A-200', 'Product A Standard 200g', 'standard', 'Type 1', 'Retail A', 200, 7, 'none'),
+        ('PRD-A-280', 'Product A Large 280g', 'standard', 'Type 1', 'Retail B', 280, 7, 'none'),
+        ('PRD-B-130', 'Product B Portion 130g', 'standard', 'Type 2', 'Retail A', 130, 7, 'none'),
+        ('PRD-B-200', 'Product B Portion 200g', 'portion', 'Type 2', 'Retail C', 200, 6, 'none'),
+        ('PRD-C-170', 'Product C Premium 170g', 'premium', 'Type 1', 'Retail B', 170, 10, 'none'),
+        ('PRD-D-150', 'Product D Peppered 150g', 'premium', 'Type 3', 'Retail A', 150, 14, 'mustard'),
+        ('PRD-E-300', 'Product E Cakes 300g', 'value-add', 'Type 1', 'Retail B', 300, 5, 'wheat, egg'),
+        ('PRD-E-400', 'Product E Premium 400g', 'value-add', 'Type 1', 'Retail C', 400, 5, 'wheat, egg, milk'),
+        ('PRD-F-200', 'Product F 200g', 'standard', 'Type 4', 'Retail A', 200, 5, 'soy'),
+        ('PRD-G-500', 'Product G Selection 500g', 'mixed', 'mixed', 'Retail B', 500, 4, 'wheat, soy'),
     ]
     for pp in prod_products:
         c.execute('INSERT INTO prod_products (product_code, description, category, species, customer, pack_size_g, shelf_life_days, allergens) VALUES (?,?,?,?,?,?,?,?)', pp)
 
     # Traceability batches
     trace_data = [
-        ('TR-0401', 'BC-COD-8831', 'Supplier F', 'cod', 'North Sea IV', 'trawl', 'Harvest Moon', '2025-03-28', '2025-03-28', '2025-03-30', 1.2, '2025-04-06', 'UK', 'MSC'),
-        ('TR-0402', 'BC-SAL-4421', 'Supplier G', 'salmon', 'Scotland West', 'farmed', None, '2025-03-29', '2025-03-29', '2025-03-31', 0.8, '2025-04-07', 'UK', 'ASC'),
-        ('TR-0403', 'BC-HAD-7712', 'Supplier H', 'haddock', 'Norwegian Sea', 'line caught', 'Polar Star', '2025-03-27', '2025-03-27', '2025-03-30', 1.5, '2025-04-08', 'Norway', 'MSC'),
-        ('TR-0404', 'BC-COD-8832', 'Supplier F', 'cod', 'North Sea IV', 'trawl', 'Sea Ranger', '2025-04-01', '2025-04-01', '2025-04-02', 1.0, '2025-04-09', 'UK', 'MSC'),
-        ('TR-0405', 'BC-MAC-2201', 'Supplier I', 'mackerel', 'Celtic Sea VII', 'purse seine', 'Atlantic Spirit', '2025-03-30', '2025-03-30', '2025-04-01', 0.5, '2025-04-14', 'UK', 'MSC'),
-        ('TR-0406', 'BC-PRN-5501', 'Supplier J', 'prawn', 'Indian Ocean', 'farmed', None, '2025-02-15', '2025-02-15', '2025-03-20', -18.0, '2025-08-15', 'Vietnam', 'ASC'),
+        ('TR-0401', 'BC-0001', 'Supplier F', 'Type 1', 'Region 1', 'Method A', 'Ref-001', '2025-03-28', '2025-03-28', '2025-03-30', 1.2, '2025-04-06', 'UK', 'Cert A'),
+        ('TR-0402', 'BC-0002', 'Supplier G', 'Type 2', 'Region 2', 'Method B', None, '2025-03-29', '2025-03-29', '2025-03-31', 0.8, '2025-04-07', 'UK', 'Cert B'),
+        ('TR-0403', 'BC-0003', 'Supplier H', 'Type 1', 'Region 3', 'Method C', 'Ref-002', '2025-03-27', '2025-03-27', '2025-03-30', 1.5, '2025-04-08', 'Region X', 'Cert A'),
+        ('TR-0404', 'BC-0004', 'Supplier F', 'Type 1', 'Region 1', 'Method A', 'Ref-003', '2025-04-01', '2025-04-01', '2025-04-02', 1.0, '2025-04-09', 'UK', 'Cert A'),
+        ('TR-0405', 'BC-0005', 'Supplier I', 'Type 3', 'Region 4', 'Method D', 'Ref-004', '2025-03-30', '2025-03-30', '2025-04-01', 0.5, '2025-04-14', 'UK', 'Cert A'),
+        ('TR-0406', 'BC-0006', 'Supplier J', 'Type 4', 'Region 5', 'Method B', None, '2025-02-15', '2025-02-15', '2025-03-20', -18.0, '2025-08-15', 'Region Y', 'Cert B'),
     ]
     for t in trace_data:
         c.execute('INSERT INTO prod_traceability (trace_id, batch_code, supplier, species, catch_area, catch_method, vessel_name, landing_date, kill_date, received_date, received_temp_c, use_by_date, country_origin, certified) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', t)

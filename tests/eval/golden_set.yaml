@@ -93,7 +93,7 @@ samples:
     question: trace batch BC-0001
     path: library
     # Matches the exact string in query_library.py (colon, no em-dash).
-    expected_pattern_description: "Traceability chain: run to catch vessel"
+    expected_pattern_description: "Traceability chain: run to source"
     expected_columns:
       [run_number, production_date, product, customer, batch_code, supplier, species,
        catch_area, catch_method, vessel_name, landing_date, country_origin, certified]
@@ -117,13 +117,13 @@ samples:
   # ------------------------------------------------------------------
 
   - id: q15
-    question: how many products have salmon in their name
+    question: how many products cost more than 10 pounds per kg to make
     path: llm
     expected_sql: |
-      SELECT COUNT(*) AS salmon_product_count
+      SELECT COUNT(*) AS expensive_products
       FROM products
-      WHERE LOWER(name) LIKE '%salmon%'
-    # Single scalar — judge compares the numeric value.
+      WHERE unit_cost_per_kg > 10
+    # Single scalar: judge compares the numeric value.
 
   - id: q16
     question: which operator ran the most production batches in the last 30 days

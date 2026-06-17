@@ -51,7 +51,7 @@ def _match(question: str) -> tuple[str | None, str | None]:
         ("which customer ordered the most this month",  "Customer orders breakdown (last 30 days)"),
         ("which suppliers delivered in the last 30 days","Supplier deliveries (last 30 days)"),
         ("yield by production line last week",          "Yield by production line (last 7 days)"),
-        ("trace batch BC-0001",                         "Traceability chain: run to catch vessel"),
+        ("trace batch BC-0001",                         "Traceability chain: run to source"),
         ("shift productivity day vs night",             "Shift productivity comparison (last 14 days)"),
         ("any open critical non-conformances",          "Open non-conformances by severity"),
     ],
@@ -105,7 +105,7 @@ class TestPatternCollisions:
 @pytest.mark.parametrize(
     "question",
     [
-        "how many products have salmon in their name",
+        "how many products cost more than 10 pounds per kg to make",
         "which operator ran the most production batches in the last 30 days",
         "which product has the highest profit margin per kg",
         "list orders that were delivered late in the last 30 days",

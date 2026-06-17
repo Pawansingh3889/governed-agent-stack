@@ -95,13 +95,13 @@ DEFAULT_SCHEMA["stock"]["tables"].update({
 # Keywords that map questions to domains
 DOMAIN_KEYWORDS = {
     "traceability": ["trace", "batch", "track", "where did", "origin", "source", "supplier", "recall",
-                     "catch area", "vessel", "MSC", "ASC", "landing", "kill date", "certified", "country of origin", "catch method"],
+                     "source region", "certified", "country of origin", "certification"],
     "production": ["production", "produce", "processed", "output", "yield", "waste", "line", "shift",
-                   "run number", "giveaway", "tare", "overweight", "filleting", "packing", "smoking",
+                   "run number", "giveaway", "tare", "overweight", "processing", "packing",
                    "PLU", "product code", "run total", "downtime", "reject", "target weight", "net weight", "capacity"],
-    "orders": ["order", "customer", "delivery", "pending", "lidl", "iceland", "tesco", "aldi", "morrisons",
+    "orders": ["order", "customer", "delivery", "pending", "retail", "wholesale",
                "despatch", "dispatch", "vehicle temp", "loaded", "cases"],
-    "staff": ["staff", "overtime", "hours", "shift", "worker", "employee", "radu", "marek",
+    "staff": ["staff", "overtime", "hours", "shift", "worker", "employee",
               "headcount", "kg per head", "productivity", "planned hours", "actual hours", "day shift", "night shift"],
     "stock": ["stock", "expir", "raw material", "inventory", "available", "shortage",
               "use by", "shelf life", "received"],
