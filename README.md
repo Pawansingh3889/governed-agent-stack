@@ -12,6 +12,8 @@
 
 </div>
 
+> Part of the [Governed Agent Stack](https://github.com/Pawansingh3889/governed-agent-stack): free, on-prem building blocks for an AI agent you can point at a real database and audit.
+
 ## Links
 - [GitHub](https://github.com/Pawansingh3889/FloorMind)
 - [Documentation](https://pawansingh3889.github.io/FloorMind/)
