@@ -89,23 +89,23 @@ $ streamlit run app.py
 ┌─────────────────────────────────────────────────┐
 │ FloorMind: 7 tabs loaded                          │
 │                                                 │
-│ > "What was the yield for cod fillets last week?"│
+│ > "What was the yield for the product last week?"│
 │                                                 │
 │ Detecting domain... production (2 tables)       │
 │ Generating SQL...                               │
 │ SELECT ProductCode, AVG(YieldPercent)            │
 │   FROM ProductionRuns                           │
-│   WHERE ProductCode = 'COD-F'                   │
+│   WHERE ProductCode = 'PRD-A'                   │
 │   AND ProductionDate >= date('now', '-7 days')  │
 │   GROUP BY ProductCode;                         │
 │                                                 │
 │ ┌──────────┬──────────────┐                     │
 │ │ Product  │ Avg Yield %  │                     │
 │ ├──────────┼──────────────┤                     │
-│ │ COD-F    │ 94.2%        │                     │
+│ │ PRD-A    │ 94.2%        │                     │
 │ └──────────┴──────────────┘                     │
 │                                                 │
-│ "Cod fillet yield averaged 94.2% last week,     │
+│ "Product A yield averaged 94.2% last week,      │
 │  which is 1.8% above your 30-day average."      │
 └─────────────────────────────────────────────────┘
 ```
@@ -174,20 +174,20 @@ User asks: "What was yesterday's waste?"
 │  Orders: 38 open   │ Shipped: 412   │ Late: 12            │
 │                                                             │
 │  TAB 4: Compliance & Traceability                           │
-│  Batch COD-2024-0847:                                       │
+│  Batch PRD-2024-0847:                                       │
 │    Raw material → Supplier ABC, intake 06:12                │
 │    Production → Line 2, yield 95.1%                         │
 │    Despatch → Customer XYZ, temp 2.1°C ✓                   │
 │                                                             │
 │  TAB 5: Smart Alerts                                        │
-│  ⚠ Yield drop: Haddock -4.2% vs 30-day avg                │
+│  ⚠ Yield drop: Product -4.2% vs 30-day avg                │
 │  ⚠ Cold Room 2: 5.3°C (threshold: 5.0°C)                  │
 │  ⚠ 3 batches expiring within 48 hours                      │
 │                                                             │
 │  TAB 6: Excel Upload                                        │
 │  Uploaded: march-production.xlsx (340 rows)                 │
 │  "What product had the most waste?"                         │
-│  → Salmon fillets: 42kg waste (8.1% of output)             │
+│  → Product line A: 42kg waste (8.1% of output)             │
 │                                                             │
 │  TAB 7: Schema Registry                                     │
 │  6 domains │ up to 147 tables │ 4 selected for current query     │

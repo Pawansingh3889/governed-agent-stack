@@ -99,4 +99,4 @@ Provide:
 2. Products with concerning yield trends
 3. Specific actionable steps the factory can take this week"""
 
-    return get_response(prompt, system_prompt="You are a factory efficiency expert. Give practical, specific advice to reduce waste and improve yield in a fish processing factory. Always include estimated GBP savings.")
+    return get_response(prompt, system_prompt="You are a factory efficiency expert. Give practical, specific advice to reduce waste and improve yield in a food manufacturing factory. Always include estimated GBP savings.")

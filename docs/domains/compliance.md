@@ -66,5 +66,5 @@ Critical NCs open for more than 2 days trigger an automatic dashboard alert
   `prod_temperature_logs.in_range = 0`.
 - "Show open critical NCs" -- compliance domain, filter
   `prod_non_conformance.severity = 'Critical' AND status != 'Closed'`.
-- "Allergen matrix for salmon products" -- compliance domain, query
+- "Allergen matrix for a product line" -- compliance domain, query
   `prod_products.allergens` filtered by species.

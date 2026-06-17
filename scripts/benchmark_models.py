@@ -26,7 +26,7 @@ from config import DATABASE_URL
 # Test questions with known correct SQL patterns
 BENCHMARK_QUESTIONS = [
     {
-        "question": "How much salmon did we process this week?",
+        "question": "How much of Product A did we process this week?",
         "expected_tables": ["ProductionBatch", "Products"],
         "expected_pattern": "SELECT",
     },

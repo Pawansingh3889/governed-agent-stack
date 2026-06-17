@@ -487,7 +487,7 @@ The LLM never sees:
 
 ### 8.3 IP and confidentiality posture for BRC / retailer clauses
 
-Retailer Code of Practice clauses (Tesco TFMS, M&S Plan A, Aldi) and
+Retailer Code of Practice clauses (major UK retailer schemes) and
 BRC §3.8 require that supplier data not leave the supplier's control.
 FloorMind's on-prem Ollama satisfies this by construction:
 

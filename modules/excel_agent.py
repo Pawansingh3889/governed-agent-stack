@@ -3,7 +3,7 @@ import pandas as pd
 
 from modules.llm import get_response
 
-EXCEL_SYSTEM_PROMPT = """You are a data analyst for a fish processing factory. The user has uploaded a spreadsheet and asked a question about it. Analyse the data and provide a clear, actionable answer.
+EXCEL_SYSTEM_PROMPT = """You are a data analyst for a food manufacturing factory. The user has uploaded a spreadsheet and asked a question about it. Analyse the data and provide a clear, actionable answer.
 
 RULES:
 - Be concise and specific with numbers

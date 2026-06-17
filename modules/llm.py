@@ -130,7 +130,7 @@ FLOORMIND_TOOLS = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "product": {"type": "string", "description": "Product name or product_type (e.g., salmon, cod)"},
+                    "product": {"type": "string", "description": "Product name or product_type (e.g., Product A, Product B)"},
                     "days": {"type": "integer", "description": "Number of days to look back (default: 7)"}
                 },
                 "required": ["product"]

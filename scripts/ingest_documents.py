@@ -11,12 +11,12 @@ SAMPLE_DOCS = {
     'HACCP_Plan_2024.pdf': {
         'category': 'HACCP',
         'content': """
-HACCP PLAN — Demo Seafoods Ltd
+HACCP PLAN — Demo Foods Ltd
 Hazard Analysis and Critical Control Points
 
 CRITICAL CONTROL POINT 1: RECEIVING RAW MATERIALS
-Hazard: Contaminated or temperature-abused raw fish
-Critical Limit: Internal temperature of fish must be between -2°C and 5°C on arrival
+Hazard: Contaminated or temperature-abused raw material
+Critical Limit: Internal temperature of raw material must be between -2°C and 5°C on arrival
 Monitoring: Check temperature of every delivery using calibrated probe thermometer
 Corrective Action: Reject any delivery above 5°C. Record rejection in supplier log.
 Verification: Daily calibration of thermometers. Monthly review of rejection records.
@@ -51,14 +51,14 @@ Effective Date: January 2024
 
 PURPOSE: To ensure all cold storage areas maintain temperatures within food safety limits.
 
-SCOPE: All cold rooms, freezers, and chilled storage areas at Demo Seafoods.
+SCOPE: All cold rooms, freezers, and chilled storage areas at Demo Foods.
 
 PROCEDURE:
 1. Temperature checks must be performed and recorded every 2 hours during operating hours.
 2. Use the calibrated digital thermometer (stored in the QC office).
 3. Record the temperature on the daily temperature log sheet (Form TC-001).
 4. Acceptable temperature ranges:
-   - Cold Room 1 (Fresh Fish): 0°C to 4°C
+   - Cold Room 1 (Fresh): 0°C to 4°C
    - Cold Room 2 (Ready to eat): 0°C to 4°C
    - Zone D: -18°C or below
    - Zone F: 0°C to 5°C
@@ -84,12 +84,12 @@ Document Number: SOP-AL-001
 PURPOSE: To prevent allergen cross-contamination and ensure accurate labelling.
 
 ALLERGENS PRESENT ON SITE:
-- Fish (all product_type)
+- None (standard products)
 - Crustaceans (prawns, crab)
 - Molluscs (mussels, squid)
 - Wheat (in breaded products)
 - Egg (in batter)
-- Milk (in fish pie mix, sauces)
+- Milk (in sauces)
 - Celery (in some marinades)
 - Mustard (in some coatings)
 - Sulphites (in some preserved products)
@@ -116,12 +116,12 @@ ALLERGEN MANAGEMENT PROCEDURES:
         'category': 'Customer Spec',
         'content': """
 CUSTOMER A — PRODUCT SPECIFICATION
-Product: Atlantic Salmon Fillet (skinless, boneless)
-Supplier: Demo Seafoods Ltd
+Product: Product A (standard)
+Supplier: Demo Foods Ltd
 Spec Number: LDL-SAL-2024-001
 
 PRODUCT DESCRIPTION:
-Fresh Atlantic Salmon fillets, skinless and boneless, individually vacuum packed.
+Product A, individually vacuum packed.
 
 WEIGHT SPECIFICATION:
 - Target weight: 140g per portion (+/- 5g)
@@ -129,12 +129,12 @@ WEIGHT SPECIFICATION:
 - Maximum weight: 150g
 
 QUALITY REQUIREMENTS:
-- Colour: Orange-pink, consistent across fillet
+- Colour: consistent across the product
 - Texture: Firm, elastic flesh. No gaping.
 - Odour: Fresh sea smell. No off-odours.
 - Foreign bodies: Zero tolerance
 - Bones: Pin-bone free (100% check required)
-- Blood spots: No more than 2 per fillet, each less than 3mm
+- Blood spots: No more than 2 per unit, each less than 3mm
 - Melanin marks: Acceptable if less than 5mm and on flesh side only
 
 SHELF LIFE:
@@ -143,8 +143,8 @@ SHELF LIFE:
 - Storage temperature: 0°C to 2°C
 
 LABELLING REQUIREMENTS:
-- Allergens: FISH (in bold)
-- Country of origin: Must state origin of fish
+- Allergens: as declared (in bold)
+- Country of origin: Must state origin
 - Catch method: Must state (e.g., Farmed, Atlantic Ocean)
 - Best before date format: DD/MM/YYYY
 
@@ -157,7 +157,7 @@ DELIVERY:
     'Staff_Handbook_2024.pdf': {
         'category': 'HR',
         'content': """
-NORTHSHORE SEAFOODS — STAFF HANDBOOK 2024
+NORTHSHORE FOODS — STAFF HANDBOOK 2024
 
 WORKING HOURS:
 - Standard shifts: Days (06:00-14:00), Afternoons (14:00-22:00), Nights (22:00-06:00)

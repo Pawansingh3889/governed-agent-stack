@@ -60,5 +60,5 @@ Total waste cost should be reported weekly by line and by product.
   `waste_log` with `products.unit_cost_per_kg`, sum by date range.
 - "Show waste breakdown by reason for Line 1" -- production domain,
   group `waste_log.reason` filtered by `production.line_number`.
-- "Giveaway trend for salmon this month" -- production domain, aggregate
+- "Giveaway trend for a product this month" -- production domain, aggregate
   `prod_run_totals.giveaway_pct` filtered by product species.

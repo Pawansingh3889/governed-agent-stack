@@ -313,7 +313,7 @@ elif '📈 Yield & Waste' in tab:
     col1, col2 = st.columns([1, 3])
     with col1:
         days = st.selectbox("Period", [7, 14, 30, 60], index=2)
-        product_filter = st.text_input("Filter product", placeholder="e.g. Salmon")
+        product_filter = st.text_input("Filter product", placeholder="e.g. Product A")
 
     # Yield trends
     df = get_yield_trends(days, product_filter if product_filter else None)
@@ -351,7 +351,7 @@ elif '📈 Yield & Waste' in tab:
     st.subheader("🔮 Waste Predictor")
     col1, col2, col3 = st.columns(3)
     with col1:
-        pred_product = st.text_input("Product name", value="Salmon Fillet")
+        pred_product = st.text_input("Product name", value="Product A")
     with col2:
         pred_input = st.number_input("Input quantity (kg)", value=500.0, step=50.0)
     with col3:
@@ -380,7 +380,7 @@ elif '🔍 Documents' in tab:
     st.title("🔍 Document Search")
     st.caption("Search your factory SOPs, HACCP plans, and specifications")
 
-    query = st.text_input("Search documents", placeholder="e.g. allergen procedure for cod")
+    query = st.text_input("Search documents", placeholder="e.g. allergen procedure")
     if query:
         results = doc_search(query, n_results=5)
         if results:
