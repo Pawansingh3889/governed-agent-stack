@@ -32,10 +32,13 @@ def _explain(prompt, df):
     """Explain results via the LLM, falling back to a plain summary if the LLM
     is unreachable, so a prebuilt query still returns its data."""
     try:
-        return get_response(prompt, system_prompt=EXPLAIN_PROMPT)
+        out = get_response(prompt, system_prompt=EXPLAIN_PROMPT)
+        if out and not out.startswith("LLM Error"):
+            return out
     except Exception:
-        n = 0 if df is None else len(df)
-        return f"{n} rows returned. (LLM explanation unavailable.)"
+        pass
+    n = 0 if df is None else len(df)
+    return f"{n} rows returned. (AI explanation unavailable.)"
 
 
 def _sop_guard(sql):
