@@ -13,7 +13,7 @@ Nobody packages this free and on-prem. That is the whole point.
 | Layer | Tool | Job |
 |---|---|---|
 | **Foundations** | [schema-scout](https://github.com/Pawansingh3889/schema-scout) | Map the database, recover undeclared relationships, flag PII, and score how ready the schema actually is for an agent. |
-| **Scoped access** | [sql-explorer-mcp](https://github.com/Pawansingh3889/sql-explorer-mcp) + [sql-sop](https://github.com/Pawansingh3889/sql-guard) | Give the agent read-only SQL access, with every query parsed and linted before it runs. |
+| **Scoped access** | [sql-explorer-mcp](https://github.com/Pawansingh3889/sql-explorer-mcp) + [sql-sop](https://github.com/Pawansingh3889/sql-guard) + [query-warden](https://github.com/Pawansingh3889/query-warden) | Give the agent read-only SQL access: every query is parsed, linted, and checked against role-based access rules before it runs. |
 | **Reasoning** | [FloorMind](https://github.com/Pawansingh3889/FloorMind) | Turn a plain-English question into a checked query and a plain-English answer. |
 | **Accountability** | [agent-blackbox](https://github.com/Pawansingh3889/agent-blackbox) | Record every step in a tamper-evident, hash-chained log you can verify later. |
 
@@ -33,6 +33,7 @@ flowchart TB
 
     subgraph Scoped_access["Scoped access"]
         SOP["sql-sop<br/>SQL safety lint"]
+        WARD["query-warden<br/>role-based access"]
         EX["sql-explorer-mcp<br/>read-only execution"]
     end
 
@@ -41,11 +42,12 @@ flowchart TB
     BB["agent-blackbox<br/>tamper-evident log"]
 
     SS -- schema context --> AG
-    AG -- generated SQL --> SOP --> EX --> DB
+    AG -- generated SQL --> SOP --> WARD --> EX --> DB
     DB -- rows --> AG --> A
 
     AG -. every step .-> BB
     SOP -. logged .-> BB
+    WARD -. logged .-> BB
     EX -. logged .-> BB
 ```
 
@@ -53,7 +55,7 @@ flowchart TB
 
 1. **Once, up front:** point schema-scout at the database. It produces a catalog, an agent-ready context file, and a readiness score. If the score is low, you fix the foundations before going further. Re-run it on a schedule and use `diff` to catch drift.
 2. **A user asks a question** in plain English. FloorMind uses the schema context to route the question to the right domain and tables, then drafts SQL.
-3. **Before anything touches the database,** sql-sop lints the draft and sql-explorer-mcp enforces read-only execution. Writes never run, and there are three independent checks rather than one.
+3. **Before anything touches the database,** sql-sop lints the draft, query-warden checks it against the asker's role (which tables and columns they may see), and sql-explorer-mcp enforces read-only execution. Writes never run, and out-of-role access is blocked before it reaches the database.
 4. **Results come back** and FloorMind explains them in plain English, with context.
 5. **agent-blackbox records the whole chain** (question, SQL, result, outcome) in a hash-chained ledger. Anyone can verify later that the record was not altered after the fact.
 
@@ -71,12 +73,13 @@ Each tool is its own repo with its own docs. Start with whichever problem is mos
 - **[schema-scout](https://github.com/Pawansingh3889/schema-scout)**: maps a SQL Server database, recovers hidden foreign keys, flags PII, scores agent-readiness, and serves the catalog to an agent over MCP.
 - **[sql-explorer-mcp](https://github.com/Pawansingh3889/sql-explorer-mcp)**: read-only Model Context Protocol server for SQL Server, Postgres, and SQLite, with three layers of safety.
 - **[sql-sop](https://github.com/Pawansingh3889/sql-guard)**: a fast rule-based SQL linter (available on [PyPI](https://pypi.org/project/sql-sop/)) that catches dangerous and slow patterns before a query runs.
+- **[query-warden](https://github.com/Pawansingh3889/query-warden)**: role-based access control for SQL. Decides whether the asker's role may touch the tables and columns a query references, before it runs.
 - **[FloorMind](https://github.com/Pawansingh3889/FloorMind)**: an on-prem natural-language query tool for manufacturing data, eval-measured rather than vibes-based.
 - **[agent-blackbox](https://github.com/Pawansingh3889/agent-blackbox)**: an append-only, hash-chained ledger that gives agent actions a tamper-evident audit trail.
 
 ## Status
 
-All five components are public and usable today. This repo is the map that ties them together, not a separate install. Pick the layers you need.
+All six components are public and usable today. This repo is the map that ties them together, not a separate install. Pick the layers you need.
 
 ## License
 
