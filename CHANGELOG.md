@@ -11,6 +11,14 @@ cut (none today; see `GOVERNANCE.md` § Release cadence for the rule).
 
 ### Added
 
+- **Temperature back on the NL query surface (read-only).** Temperature
+  questions (readings and breaches by location) now route through the compliance
+  domain and a prebuilt query, reversing the v0.3.1 removal. This is read-only
+  reporting only: the certified SCADA / QA monitoring loop remains the
+  authoritative record for compliance sign-off. The prebuilt fast path also now
+  falls back to a plain row summary when the local LLM is offline, so a query
+  still returns its data instead of erroring.
+
 - **Governed Agent Stack wiring: sql-sop + agent-blackbox.** Generated SQL is
   now linted by [sql-sop](https://github.com/Pawansingh3889/sql-guard) before it
   runs (error-severity findings block the query; advisories are recorded, not

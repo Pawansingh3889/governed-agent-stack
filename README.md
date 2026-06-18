@@ -46,15 +46,14 @@ Factory managers and shift leads need answers from production data: yield, waste
 - **Smart alerts**: flags yield drops, temperature breaches, and overtime automatically
 - **Domain-aware**: loads compliance, production, and waste rules at runtime for context-aware answers
 
-> **Scope: FloorMind does not answer natural-language queries about real-time
-> temperature data.** Temperature monitoring in BRC-audited operations is a
-> formal closed loop (calibrated probes → SCADA → automated log → QA
-> sign-off). Routing temperature questions through an LLM would let
-> operators get a soft "no excursions" answer without consulting the
-> formal monitoring system, breaking the audit trail. Temperature breach
-> *push alerts* (`modules/alerts.py`) stay. Those are explicit,
-> traceable, and tied to named recipients. The compliance dashboard
-> remains the authoritative real-time temperature surface.
+> **Temperature: read-only visibility, certified loop stays authoritative.**
+> FloorMind answers temperature questions over the NL surface as read-only
+> reporting (readings and breaches by location). In BRC-audited operations the
+> certified monitoring loop (calibrated probes → SCADA → automated log → QA
+> sign-off) remains the authoritative record for compliance sign-off; the agent
+> surfaces the data, it does not replace that loop. Temperature breach push
+> alerts (`modules/alerts.py`) stay explicit, traceable, and tied to named
+> recipients.
 
 ---
 
@@ -64,7 +63,7 @@ The 2026 agentic-AI reports (McKinsey, Deloitte, and others) keep landing on the
 
 - **read-only** by default: only `SELECT`/`WITH`; writes blocked
 - every query **linted by sql-sop and audit-logged** for traceability, with a tamper-evident `agent-blackbox` ledger when installed
-- **scoped** away from questions it shouldn't answer (real-time temperature stays with the certified monitoring loop)
+- **scoped**: each question is filtered to its detected domain, so the LLM only sees the relevant tables, not the whole schema
 - **measured** by an eval harness, not vibes
 - **on-prem**: nothing leaves the network
 
@@ -317,7 +316,7 @@ production:
 # Also: orders, staff, stock, compliance
 ```
 
-> **Schema mapping:** FloorMind maps a manufacturing schema into 6 business domains (production, traceability, orders, compliance, staff, suppliers), with pre-built SQL queries and production push alerts. Temperature data is not queryable through the NL surface. See the scope note above.
+> **Schema mapping:** FloorMind maps a manufacturing schema into 6 business domains (production, traceability, orders, compliance, staff, suppliers), with pre-built SQL queries and production push alerts. Temperature data is queryable for read-only reporting; the certified monitoring loop remains authoritative for compliance.
 
 > The schema can model a batch-centric run structure (one batch feeding one run that produces several products), and the registry maps the tables to business domains for efficient NL-to-SQL generation.
 
