@@ -48,8 +48,12 @@ st.set_page_config(
 # === AUTHENTICATION ===
 def check_password():
     """Gate access with password authentication. Configure in .streamlit/secrets.toml."""
-    if not hasattr(st, 'secrets') or 'password' not in st.secrets:
-        return True  # No password configured — allow access (dev mode)
+    try:
+        configured = hasattr(st, 'secrets') and 'password' in st.secrets
+    except Exception:
+        configured = False  # no secrets.toml present, run open (dev mode)
+    if not configured:
+        return True  # No password configured, allow access (dev mode)
 
     if st.session_state.get('authenticated'):
         return True
