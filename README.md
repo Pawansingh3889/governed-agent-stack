@@ -8,14 +8,21 @@ This is a reference stack of small tools that each solve one of those problems, 
 
 Nobody packages this free and on-prem. That is the whole point.
 
-## The four layers
+## The layers
 
 | Layer | Tool | Job |
 |---|---|---|
 | **Foundations** | [schema-scout](https://github.com/Pawansingh3889/schema-scout) | Map the database, recover undeclared relationships, flag PII, and score how ready the schema actually is for an agent. |
 | **Scoped access** | [sql-explorer-mcp](https://github.com/Pawansingh3889/sql-explorer-mcp) + [sql-sop](https://github.com/Pawansingh3889/sql-guard) + [query-warden](https://github.com/Pawansingh3889/query-warden) | Give the agent read-only SQL access: every query is parsed, linted, and checked against role-based access rules before it runs. |
 | **Reasoning** | [FloorMind](https://github.com/Pawansingh3889/FloorMind) | Turn a plain-English question into a checked query and a plain-English answer. |
+| **Result masking** | [pii-veil](https://github.com/Pawansingh3889/pii-veil) | Mask any PII that survives into result rows before they reach the model. |
 | **Accountability** | [agent-blackbox](https://github.com/Pawansingh3889/agent-blackbox) | Record every step in a tamper-evident, hash-chained log you can verify later. |
+
+## Flagship: sql-steward
+
+[sql-steward](https://github.com/Pawansingh3889/sql-steward) bundles the scoped-access, masking, and accountability layers into one Model Context Protocol server, behind a stronger guarantee: **the agent never writes SQL at all.** Instead of validating SQL the model wrote, sql-steward compiles every query from a semantic layer you control (entities, joins, metrics, PII tags), so there is no `run_sql` tool to misuse. Blocked PII is refused before the query runs, every call can land in the agent-blackbox ledger, and the same tools work across SQL Server, Postgres, and SQLite.
+
+Use it as the all-in-one entry point, or compose the individual pieces below yourself. They are the same building blocks either way.
 
 ## How it fits together
 
@@ -38,17 +45,23 @@ flowchart TB
     end
 
     DB[("Your database<br/>stays on-prem")]
+    VEIL["pii-veil<br/>mask PII in results"]
     A["Answer + chart"]
     BB["agent-blackbox<br/>tamper-evident log"]
+    ST["sql-steward<br/>all-in-one gateway:<br/>agent never writes SQL"]
 
     SS -- schema context --> AG
     AG -- generated SQL --> SOP --> WARD --> EX --> DB
-    DB -- rows --> AG --> A
+    DB -- rows --> VEIL --> AG --> A
+
+    Q -. or, one governed gateway .-> ST
+    ST -- compiled SQL --> DB
 
     AG -. every step .-> BB
     SOP -. logged .-> BB
     WARD -. logged .-> BB
     EX -. logged .-> BB
+    ST -. logged .-> BB
 ```
 
 ## How a question flows through it
@@ -70,16 +83,18 @@ flowchart TB
 
 Each tool is its own repo with its own docs. Start with whichever problem is most urgent. Usually that is schema-scout, because everything downstream depends on knowing the data first.
 
+- **[sql-steward](https://github.com/Pawansingh3889/sql-steward)** (flagship): one governed MCP server where the agent never writes SQL. Queries are compiled from a semantic layer you control, multi-dialect (SQL Server, Postgres, SQLite), with optional role checks, masking, and audit wired in.
 - **[schema-scout](https://github.com/Pawansingh3889/schema-scout)**: maps a SQL Server database, recovers hidden foreign keys, flags PII, scores agent-readiness, and serves the catalog to an agent over MCP.
 - **[sql-explorer-mcp](https://github.com/Pawansingh3889/sql-explorer-mcp)**: read-only Model Context Protocol server for SQL Server, Postgres, and SQLite, with three layers of safety.
 - **[sql-sop](https://github.com/Pawansingh3889/sql-guard)**: a fast rule-based SQL linter (available on [PyPI](https://pypi.org/project/sql-sop/)) that catches dangerous and slow patterns before a query runs.
 - **[query-warden](https://github.com/Pawansingh3889/query-warden)**: role-based access control for SQL. Decides whether the asker's role may touch the tables and columns a query references, before it runs.
+- **[pii-veil](https://github.com/Pawansingh3889/pii-veil)**: masks PII in query results (Microsoft Presidio when installed, regex fallback otherwise) before they reach the model.
 - **[FloorMind](https://github.com/Pawansingh3889/FloorMind)**: an on-prem natural-language query tool for manufacturing data, eval-measured rather than vibes-based.
 - **[agent-blackbox](https://github.com/Pawansingh3889/agent-blackbox)**: an append-only, hash-chained ledger that gives agent actions a tamper-evident audit trail.
 
 ## Status
 
-All six components are public and usable today. This repo is the map that ties them together, not a separate install. Pick the layers you need.
+All eight components are public and usable today, including the [sql-steward](https://github.com/Pawansingh3889/sql-steward) flagship that bundles them. This repo is the map that ties them together, not a separate install. Pick the layers you need, or start with sql-steward.
 
 ## License
 
