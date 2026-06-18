@@ -5,9 +5,11 @@ All notable user-facing changes to FloorMind are logged here.
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 FloorMind is deployed, not released — so entries accumulate under
 `[Unreleased]` and only gain a version + date when a tagged release is
-cut (none today; see `GOVERNANCE.md` § Release cadence for the rule).
+cut (see `GOVERNANCE.md` § Release cadence for the rule).
 
 ## [Unreleased]
+
+## [0.4.0] - 2026-06-18
 
 ### Added
 
@@ -77,6 +79,8 @@ cut (none today; see `GOVERNANCE.md` § Release cadence for the rule).
 - `test_schema_registry.py` now covers 6 domains (was 7).
 
 ## [Unreleased]
+
+## [0.4.0] - 2026-06-18
 
 ### Added
 
