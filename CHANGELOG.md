@@ -78,9 +78,7 @@ cut (see `GOVERNANCE.md` § Release cadence for the rule).
 
 - `test_schema_registry.py` now covers 6 domains (was 7).
 
-## [Unreleased]
-
-## [0.4.0] - 2026-06-18
+## [0.3.0] - 2026-05-20
 
 ### Added
 
