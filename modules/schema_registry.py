@@ -107,7 +107,8 @@ DOMAIN_KEYWORDS = {
               "use by", "shelf life", "received"],
     "compliance": ["allergen", "compliance", "audit", "haccp", "brc", "food safety",
                    "non conformance", "NC", "corrective action", "root cause", "foreign body",
-                   "critical NC", "case verification", "scanner", "label", "line clear", "allergen changeover"],
+                   "critical NC", "case verification", "scanner", "label", "line clear", "allergen changeover",
+                   "temperature", "temp", "cold room", "cold store", "chiller", "freezer", "excursion"],
 }
 
 

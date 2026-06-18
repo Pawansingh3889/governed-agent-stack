@@ -328,6 +328,25 @@ QUERY_LIBRARY = [
         """,
         "description": "Certification status by batch",
     },
+    {
+        "patterns": [
+            r"temperature.*(breach|excursion|exceed|out of range|reading|log|by location)",
+            r"(cold room|cold store|chiller|freezer).*(temp|temperature|breach|warm)",
+            r"(temp|temperature).*(cold room|chiller|freezer|breach|excursion|log)",
+        ],
+        "sql": lambda: """
+            SELECT location,
+                   COUNT(*) as readings,
+                   ROUND(AVG(temp_celsius), 1) as avg_temp_c,
+                   ROUND(MIN(temp_celsius), 1) as min_temp_c,
+                   ROUND(MAX(temp_celsius), 1) as max_temp_c,
+                   SUM(CASE WHEN in_range = 0 THEN 1 ELSE 0 END) as breaches
+            FROM prod_temperature_logs
+            GROUP BY location
+            ORDER BY breaches DESC, location
+        """,
+        "description": "Temperature readings and breaches by location",
+    },
 ]
 
 

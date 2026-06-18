@@ -28,6 +28,16 @@ def _cached_sql_query(sql):
 EXPLAIN_PROMPT = """Explain these SQL results to a manager in 2-3 sentences. Use GBP and kg. Flag problems. Be concise."""
 
 
+def _explain(prompt, df):
+    """Explain results via the LLM, falling back to a plain summary if the LLM
+    is unreachable, so a prebuilt query still returns its data."""
+    try:
+        return get_response(prompt, system_prompt=EXPLAIN_PROMPT)
+    except Exception:
+        n = 0 if df is None else len(df)
+        return f"{n} rows returned. (LLM explanation unavailable.)"
+
+
 def _sop_guard(sql):
     """Run the sql-sop lint layer over a query.
 
@@ -73,7 +83,7 @@ def run_query(question):
                 else:
                     data_summary = df.head(20).to_string()
                     prompt = f"Question: {question}\n\nResults:\n{data_summary}\n\nExplain:"
-                    explanation = get_response(prompt, system_prompt=EXPLAIN_PROMPT)
+                    explanation = _explain(prompt, df)
                 return {'sql': sql, 'data': df, 'explanation': explanation, 'error': False}
             except Exception as e:
                 audit_log.log_execution(
@@ -153,7 +163,7 @@ def run_query(question):
         else:
             data_summary = df.head(20).to_string()
             prompt = f"Question: {question}\n\nSQL: {sql}\n\nResults:\n{data_summary}\n\nExplain:"
-            explanation = get_response(prompt, system_prompt=EXPLAIN_PROMPT)
+            explanation = _explain(prompt, df)
 
         return {
             'sql': sql,
