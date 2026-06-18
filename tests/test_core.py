@@ -82,7 +82,7 @@ class TestSchemaRegistry:
         assert "production" in schema
         assert "orders" in schema
         assert "staff" in schema
-        # temperature domain removed in v0.3.1 — see CHANGELOG + README scope note
+        # temperature routes via the compliance domain (read-only), not its own schema key
 
     def test_detect_domain_traceability(self):
         from modules.schema_registry import detect_domain
@@ -99,9 +99,9 @@ class TestSchemaRegistry:
         assert detect_domain("pending orders for Customer A") == "orders"
         assert detect_domain("customer delivery schedule") == "orders"
 
-    # test_detect_domain_temperature removed in v0.3.1 — temperature is no
-    # longer a query domain in FloorMind's NL surface. See CHANGELOG and the
-    # README scope note for the regulatory-correctness rationale.
+    def test_detect_domain_temperature(self):
+        from modules.schema_registry import detect_domain
+        assert detect_domain("any temperature breaches in the cold room") == "compliance"
 
     def test_detect_domain_staff(self):
         from modules.schema_registry import detect_domain

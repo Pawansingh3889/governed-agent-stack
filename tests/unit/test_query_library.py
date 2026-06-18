@@ -54,6 +54,7 @@ def _match(question: str) -> tuple[str | None, str | None]:
         ("trace batch BC-0001",                         "Traceability chain: run to source"),
         ("shift productivity day vs night",             "Shift productivity comparison (last 14 days)"),
         ("any open critical non-conformances",          "Open non-conformances by severity"),
+        ("show me temperature breaches by location",     "Temperature readings and breaches by location"),
     ],
 )
 def test_canonical_question_hits_expected_pattern(
@@ -91,9 +92,8 @@ class TestPatternCollisions:
         sql, desc = find_matching_query("which products have the most waste")
         assert desc == "Top products by waste this week"
 
-    # Temperature patterns previously here (patterns 4 and 13) were removed
-    # in v0.3.1 — temperature is no longer routed through the NL surface.
-    # See CHANGELOG and README scope note.
+    # Temperature is back on the NL surface (read-only reporting): see the
+    # temperature pattern in query_library.py and q21 in golden_set.yaml.
 
 
 # ---------------------------------------------------------------------------

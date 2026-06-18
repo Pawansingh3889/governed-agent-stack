@@ -39,9 +39,8 @@ samples:
     expected_pattern_description: All pending orders by customer
     expected_columns: [customer, product, total_kg, num_orders, earliest_delivery]
 
-  # q04 (temperature excursions) removed in v0.3.1 — temperature queries are
-  # not in FloorMind's NL surface; that's a formal SCADA / compliance dashboard
-  # concern. See CHANGELOG.
+  # q04 (temperature excursions) was removed in v0.3.1; temperature is back as
+  # q21 below (read-only reporting). See CHANGELOG.
 
   - id: q05
     question: average yield by product
@@ -111,6 +110,12 @@ samples:
     expected_pattern_description: Open non-conformances by severity
     expected_columns: [nc_id, nc_date, nc_type, severity, description, raised_by, status, product]
 
+  - id: q21
+    question: show me temperature breaches by location
+    path: library
+    expected_pattern_description: Temperature readings and breaches by location
+    expected_columns: [location, readings, avg_temp_c, min_temp_c, max_temp_c, breaches]
+
   # ------------------------------------------------------------------
   # LLM PATH — no library match, real NL-to-SQL accuracy measurement.
   # These are where the "~60%" README claim actually gets tested.
@@ -169,5 +174,5 @@ samples:
         AND waste_kg > 20
     # Scalar — exact match.
 
-  # q20 (average temperature by location) removed in v0.3.1 — same reasoning
-  # as q04 above.
+  # q20 (average temperature by location) was removed in v0.3.1; temperature
+  # returned as q21 (read-only reporting).

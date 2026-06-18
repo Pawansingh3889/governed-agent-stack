@@ -45,6 +45,7 @@ _HAS_STREAMLIT = importlib.util.find_spec("streamlit") is not None
         ("who worked overtime this week",                         "staff"),
         ("what raw materials are running low",                    "stock"),
         ("allergen changeover check on line 2",                   "compliance"),
+        ("any temperature excursions in the cold room",           "compliance"),
     ],
 )
 def test_detect_domain_happy_paths(question: str, expected_domain: str) -> None:
@@ -139,11 +140,9 @@ class TestGetPromptForQuestion:
         assert "production" in prompt
         assert "products" in prompt
 
-    # test_temperature_question_emits_temp_logs_table removed in v0.3.1 —
-    # temperature is no longer a query domain. See README scope note and
-    # CHANGELOG for rationale. Compliance-domain temp tables still exist for
-    # batch-traceability lookups (e.g. "what was the intake temp on Batch X?")
-    # but they are not routed via temperature keywords.
+    # Temperature is routed via the compliance domain again (read-only
+    # reporting); the temperature keywords live in DOMAIN_KEYWORDS and the
+    # detect-domain happy-path above covers the routing.
 
 
 if __name__ == "__main__":
