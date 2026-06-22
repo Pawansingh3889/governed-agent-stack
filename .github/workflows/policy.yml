@@ -1,0 +1,27 @@
+name: policy
+
+# Enforces the stack's own governance rules (policies/) against stack.yaml on every PR.
+# This is the one check this repo actually needs — it keeps GOVERNANCE.md honest.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  conftest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install conftest
+        run: |
+          ver=$(curl -fsSL https://api.github.com/repos/open-policy-agent/conftest/releases/latest \
+            | grep -oP '"tag_name": "v\K[^"]+')
+          echo "conftest version: $ver"
+          curl -fsSL "https://github.com/open-policy-agent/conftest/releases/download/v${ver}/conftest_${ver}_Linux_x86_64.tar.gz" \
+            | tar -xz conftest
+          sudo mv conftest /usr/local/bin/
+
+      - name: Run governance policies
+        run: conftest test stack.yaml --policy policies/
