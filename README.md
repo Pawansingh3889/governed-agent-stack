@@ -96,6 +96,14 @@ Each tool is its own repo with its own docs. Start with whichever problem is mos
 
 All eight components are public and usable today, including the [sql-steward](https://github.com/Pawansingh3889/sql-steward) flagship that bundles them. This repo is the map that ties them together, not a separate install. Pick the layers you need, or start with sql-steward.
 
+## Governance
+
+The stack holds itself to the same bar it helps you apply to an agent: on-prem, open,
+single-purpose, auditable. Those rules aren't just prose — the components are declared in
+[stack.yaml](stack.yaml) and enforced as policy-as-code in [policies/](policies/), so a
+new component has to pass the same check. See [GOVERNANCE.md](GOVERNANCE.md) for the
+principles and [ROADMAP.md](ROADMAP.md) for where it's heading.
+
 ## License
 
 [MIT](LICENSE).

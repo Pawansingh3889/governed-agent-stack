@@ -1,0 +1,53 @@
+# The components of the Governed Agent Stack, as machine-readable data.
+# The policies in policies/ are checked against this file, so the stack's own
+# governance rules (on-prem, licensed, single governance concern) are enforced
+# rather than just described. Add a component here and it must pass the same check.
+
+components:
+  - name: schema-scout
+    repo: https://github.com/Pawansingh3889/schema-scout
+    license: MIT
+    on_prem: true
+    role: schema-discovery
+
+  - name: sql-explorer-mcp
+    repo: https://github.com/Pawansingh3889/sql-explorer-mcp
+    license: MIT
+    on_prem: true
+    role: read-only-access
+
+  - name: sql-sop
+    repo: https://github.com/Pawansingh3889/sql-guard
+    license: MIT
+    on_prem: true
+    role: sql-linting
+
+  - name: query-warden
+    repo: https://github.com/Pawansingh3889/query-warden
+    license: MIT
+    on_prem: true
+    role: access-control
+
+  - name: pii-veil
+    repo: https://github.com/Pawansingh3889/pii-veil
+    license: MIT
+    on_prem: true
+    role: pii-masking
+
+  - name: agent-blackbox
+    repo: https://github.com/Pawansingh3889/agent-blackbox
+    license: MIT
+    on_prem: true
+    role: audit
+
+  - name: sql-steward
+    repo: https://github.com/Pawansingh3889/sql-steward
+    license: MIT
+    on_prem: true
+    role: governed-query-gateway
+
+  - name: FloorMind
+    repo: https://github.com/Pawansingh3889/FloorMind
+    license: Apache-2.0
+    on_prem: true
+    role: reasoning-application
