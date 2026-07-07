@@ -1,5 +1,7 @@
 # pii-veil
 
+[![PyPI](https://img.shields.io/pypi/v/pii-veil)](https://pypi.org/project/pii-veil/) [![Downloads](https://static.pepy.tech/badge/pii-veil)](https://pepy.tech/projects/pii-veil)
+
 **Mask PII in SQL query results before they reach the LLM or the screen.**
 
 > Part of the [Governed Agent Stack](https://github.com/Pawansingh3889/governed-agent-stack): free, on-prem building blocks for an AI agent you can point at a real database and audit.
