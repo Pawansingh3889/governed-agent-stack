@@ -1,5 +1,7 @@
 # query-warden
 
+[![PyPI](https://img.shields.io/pypi/v/query-warden)](https://pypi.org/project/query-warden/) [![Downloads](https://static.pepy.tech/badge/query-warden)](https://pepy.tech/projects/query-warden)
+
 **Role-based access control for SQL queries. Decide whether a role may run a query before it ever touches the database.**
 
 > Part of the [Governed Agent Stack](https://github.com/Pawansingh3889/governed-agent-stack): free, on-prem building blocks for an AI agent you can point at a real database and audit.
