@@ -2,10 +2,11 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.Pawansingh3889/sql-explorer-mcp",
   "title": "sql-explorer-mcp",
-  "description": "Read-only SQL access for LLMs. Three engines (SQL Server, Postgres, SQLite) behind three safety layers: read-only connection, SELECT-only validation, sql-sop linting.",
+  "description": "Read-only SQL for LLMs across SQL Server, Postgres and SQLite, behind three safety layers.",
   "repository": {
-    "url": "https://github.com/Pawansingh3889/sql-explorer-mcp",
-    "source": "github"
+    "url": "https://github.com/Pawansingh3889/governed-agent-stack",
+    "source": "github",
+    "subfolder": "packages/sql-explorer-mcp"
   },
   "version": "0.1.1",
   "packages": [

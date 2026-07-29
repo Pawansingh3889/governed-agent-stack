@@ -1,11 +1,13 @@
 name: policy
 
 # Enforces the stack's own governance rules (policies/) against stack.yaml on every PR,
-# and checks that control-tower's registry still describes this tree. Both are the same
-# class of check: a claim this repo makes about itself, verified rather than trusted.
-# stack.yaml says what the components are; tools.yaml says where they are and what they
-# produce. A registry full of paths that no longer resolve fails silently at runtime as
-# a wall of dead dots, so it is caught here instead.
+# checks that control-tower's registry still describes this tree, and validates every
+# server.json against the published MCP schema. All three are the same class of check:
+# a claim this repo makes about itself, verified rather than trusted. stack.yaml says
+# what the components are; tools.yaml says where they are and what they produce;
+# server.json is what the MCP Registry is handed at release. A registry full of paths
+# that no longer resolve fails silently at runtime as a wall of dead dots, and a bad
+# server.json fails after the PyPI upload has already gone out, so both are caught here.
 
 on:
   push:
@@ -16,7 +18,7 @@ jobs:
   conftest:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install conftest
         run: |
@@ -33,7 +35,7 @@ jobs:
   registry:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
@@ -42,3 +44,14 @@ jobs:
       # registry, it is not part of the stack the workspace resolves.
       - name: Validate control-tower's registry
         run: uv run --with pyyaml python scripts/check_tools_registry.py
+
+  server-json:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Validate every server.json against the MCP schema
+        run: uv run --with jsonschema python scripts/check_server_json.py
