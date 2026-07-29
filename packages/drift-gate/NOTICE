@@ -1,0 +1,10 @@
+drift-gate
+Copyright (c) 2026 Pawan Singh Kapkoti
+
+Licensed under the MIT License (see LICENSE).
+
+Part of the Governed Agent Stack:
+https://github.com/Pawansingh3889/governed-agent-stack
+
+drift-gate reads catalog files produced by schema-scout and, optionally,
+records verdicts to agent-blackbox. Those projects carry their own licences.

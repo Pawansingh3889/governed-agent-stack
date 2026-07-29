@@ -1,0 +1,141 @@
+# Changelog
+
+All notable user-facing changes to FloorMind are logged here.
+
+The format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+FloorMind is deployed, not released — so entries accumulate under
+`[Unreleased]` and only gain a version + date when a tagged release is
+cut (see `GOVERNANCE.md` § Release cadence for the rule).
+
+## [Unreleased]
+
+## [0.4.0] - 2026-06-18
+
+### Added
+
+- **Temperature back on the NL query surface (read-only).** Temperature
+  questions (readings and breaches by location) now route through the compliance
+  domain and a prebuilt query, reversing the v0.3.1 removal. This is read-only
+  reporting only: the certified SCADA / QA monitoring loop remains the
+  authoritative record for compliance sign-off. The prebuilt fast path also now
+  falls back to a plain row summary when the local LLM is offline, so a query
+  still returns its data instead of erroring.
+
+- **Governed Agent Stack wiring: sql-sop + agent-blackbox.** Generated SQL is
+  now linted by [sql-sop](https://github.com/Pawansingh3889/sql-guard) before it
+  runs (error-severity findings block the query; advisories are recorded, not
+  shown to the user), and every audit event is mirrored into a tamper-evident,
+  hash-chained [agent-blackbox](https://github.com/Pawansingh3889/agent-blackbox)
+  ledger at `logs/blackbox.db` (on by default when installed; set
+  `FLOORMIND_BLACKBOX=0` to disable, or `FLOORMIND_BLACKBOX_DB` to choose the
+  path). Wired into both the live `sql_agent` path and the LangGraph
+  `agent_graph` path, so the stack diagram is true at runtime. New tests in
+  `tests/unit/test_sop_lint.py` and `tests/unit/test_audit_blackbox.py`.
+
+- **Root-cause *scaffolding* (`modules/rca.py`).** Fuses the two
+  existing systems — production data + the document RAG — into an
+  evidence packet for an anomaly (yield drop today). It (1) ranks
+  production dimensions (line / shift / operator) by how far each
+  group's yield sits from the overall mean — plain descriptive
+  statistics, no inference; (2) retrieves the relevant corrective-action
+  passage from the SOP / HACCP / BRC document store via the pluggable
+  vector backend; (3) builds a 5-Whys *question* chain seeded by the
+  top candidate factor. **It never concludes.** `RcaScaffold` exposes
+  `owner` / `verified_by` slots that stay empty until a named human
+  takes ownership — `is_actionable_record` is False until they do. This
+  is the deliberate BRC-audit boundary: FloorMind correlates and
+  retrieves; a competent human concludes. 15 unit tests in
+  `tests/unit/test_rca.py` lock the audit boundary and the correlation
+  contract.
+
+## [0.3.1] - 2026-05-24
+
+### Removed
+
+- **Standalone `temperature` domain in the NL query surface.** Temperature
+  monitoring in BRC-audited operations is a formal closed loop (calibrated
+  probes -> SCADA -> automated log -> QA sign-off). Routing temperature
+  questions through an LLM let operators get a soft "no excursions"
+  answer without consulting the formal monitoring system, breaking the
+  audit trail. Removed:
+  - the `temperature` entry from `DEFAULT_SCHEMA` in
+    `modules/schema_registry.py`
+  - the `temperature` keyword block from `DOMAIN_KEYWORDS`
+  - two library patterns from `modules/query_library.py` (temperature
+    excursions and breach queries)
+  - golden-set tests `q04` (temperature excursions) and `q20` (average
+    temperature by location)
+  - the temperature example block from `schema.yaml` (replaced with a
+    rationale comment)
+  - the corresponding unit test in `tests/unit/test_schema_registry.py`
+
+  **Kept:** `prod_temperature_logs` and `temp_logs` as tables inside the
+  `compliance` domain for batch-traceability lookups (e.g. "what was the
+  intake temperature on Batch X?"). Push alerts in `modules/alerts.py`
+  remain — those are explicit, traceable, and named-recipient.
+
+### Changed
+
+- `test_schema_registry.py` now covers 6 domains (was 7).
+
+## [0.3.0] - 2026-05-20
+
+### Added
+
+- **Eval harness** (`tests/eval/`) — golden set of 20 factory questions
+  across library and LLM paths, judge with result-set equivalence,
+  failure-mode taxonomy in `tests/eval/failure_modes.md`. Runs via
+  `make eval-library` (no Ollama) or `make eval` (full).
+- **Four golden-set make targets** — `make eval`, `make eval-library`,
+  `make eval-llm`, `make typecheck-ty` for CI-parity type checking.
+- **Per-module unit tests** under `tests/unit/` — `test_sql_validator.py`
+  (28 tests + 1 documented xfail covering all 5 pipeline stages),
+  `test_query_library.py` (regex-collision guards + happy paths),
+  `test_schema_registry.py` (all 6 domains + edges).
+- **Governance paperwork** — `GOVERNANCE.md`, `SECURITY.md`,
+  `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`, `THIRD_PARTY_NOTICES.md`,
+  plus `NOTICE` per Apache 2.0 § 4(d). Full contributor contract now
+  visible on the repo without anyone asking.
+- **Contributor-experience automation** — PR template with checklist,
+  CODEOWNERS auto-routing reviews, first-contributor welcome workflow,
+  conventional-commit PR-title validator.
+- **MCP tool docstrings expanded** — every tool in
+  `mcp_servers/database_server.py` and `doc_search_server.py` now
+  carries "Use this when" context, full domain lists, and example
+  inputs/outputs so LLM clients pick the right tool without a
+  round-trip.
+
+### Changed
+
+- **Relicensed from MIT to Apache 2.0.** Solo-authored codebase, so the
+  relicense is clean. Apache 2.0 adds an explicit patent grant and the
+  NOTICE convention. `sql-sop` stays on MIT separately because it's a
+  published PyPI package and downstream users expect that licence.
+- **CI opts into Node.js 24** via `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`
+  (closes #9). Covers the full lint + 3.11 + 3.12 test matrix.
+- **Library path pattern 5 tightened** to word-boundary the `product`
+  alternative so "yield by production line" no longer greedy-matches.
+  Caught by the eval harness on its first run; fix lands with
+  test coverage in `tests/unit/test_query_library.py`.
+- **README accuracy claim** — replaced the unverified "~60%" with a
+  pointer to `tests/eval/`. Current number is whatever the harness
+  reports on your model + schema.
+
+### Fixed
+
+- **Pattern-16 regex collision** (giveaway) — same class of bug as the
+  pattern-5 fix. `(product|plu).*waste` now uses word-boundaries so
+  "production batches with waste" no longer steals that route.
+- **`test_sql_validator.py` lint nit** — extra blank line after import
+  block dropped per ruff I001.
+
+### Closed issues
+
+- #1 Add Dockerfile for containerised deployment
+- #2 Add more pre-built query patterns (10 → 18)
+- #9 Upgrade GitHub Actions to Node.js 24
+
+---
+
+*Earlier history lives in the git log — `git log --oneline` on any
+commit on `main`.*

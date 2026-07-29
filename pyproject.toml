@@ -1,0 +1,41 @@
+# Workspace root for the Governed Agent Stack.
+#
+# This file is not a published package — it exists to tie the components
+# together for local development. Each package in packages/ keeps its own
+# pyproject.toml, version, and PyPI identity, and is installable on its own.
+# That independence is the point of the stack; the monorepo is a convenience
+# for the person maintaining all nine, not a bundling of them into one thing.
+
+[project]
+name = "governed-agent-stack"
+version = "0.1.0"
+description = "Workspace root for the Governed Agent Stack. Not published."
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+# Cross-component dependencies resolve to the sibling in packages/ rather than
+# to PyPI, so a change in one is picked up by the others without a release.
+# Published wheels are unaffected: these are workspace-local sources, not
+# rewritten requirements.
+[tool.uv.sources]
+schema-scout = { workspace = true }
+sql-sop = { workspace = true }
+sql-explorer-mcp = { workspace = true }
+query-warden = { workspace = true }
+pii-veil = { workspace = true }
+agent-blackbox = { workspace = true }
+sql-steward = { workspace = true }
+drift-gate = { workspace = true }
+
+[dependency-groups]
+dev = [
+  "pytest>=8.0",
+  "pytest-cov>=5.0",
+  "ruff>=0.4",
+]

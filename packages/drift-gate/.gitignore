@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+.coverage
+htmlcov/
+
+# never commit a real baseline or a real policy
+/baseline/
+/live/
+drift-policy.yml
+*.drift.html

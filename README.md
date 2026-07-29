@@ -97,6 +97,29 @@ Each tool is its own repo with its own docs. Start with whichever problem is mos
 
 All nine components are public and usable today, including the [sql-steward](https://github.com/Pawansingh3889/sql-steward) flagship that bundles them. This repo is the map that ties them together, not a separate install. Pick the layers you need, or start with sql-steward.
 
+## Repository layout
+
+The components live here, as a [uv workspace](https://docs.astral.sh/uv/concepts/projects/workspaces/). Each keeps its own `pyproject.toml`, its own version, and its own PyPI identity — the monorepo is a convenience for maintaining nine things, not a bundling of them into one. Nothing about installing a single component changed.
+
+```
+packages/          eight publishable libraries
+  agent-blackbox/  drift-gate/       pii-veil/     query-warden/
+  schema-scout/    sql-explorer-mcp/ sql-sop/      sql-steward/
+apps/
+  floormind/       the Streamlit application (not a package)
+policies/          the governance rules, checked against stack.yaml
+stack.yaml         the components, as machine-readable data
+```
+
+```bash
+git clone https://github.com/Pawansingh3889/governed-agent-stack
+cd governed-agent-stack
+uv sync --all-packages --all-extras     # every component, wired to its siblings
+uv run --directory packages/sql-steward pytest
+```
+
+Cross-component dependencies resolve to the sibling in `packages/` rather than to PyPI, so a change in `pii-veil` is picked up by `sql-steward` without a release. Published wheels are unaffected — those are workspace-local sources, not rewritten requirements.
+
 ## Governance
 
 The stack holds itself to the same bar it helps you apply to an agent: on-prem, open,

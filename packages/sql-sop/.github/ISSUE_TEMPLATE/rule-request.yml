@@ -1,0 +1,18 @@
+name: Rule request
+description: Suggest a new SQL or Python lint rule
+title: "rule: "
+labels: ["rule-request", "needs-triage"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What pattern should this rule catch?
+      description: |
+        Useful to include if you have them — a SQL example that should
+        fail, an example that should pass, why this matters in
+        production. Skip what you don't have.
+      placeholder: |
+        Pattern:
+        Example that should fail:
+        Example that should pass:
+        Why it matters:

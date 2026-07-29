@@ -1,0 +1,7 @@
+- id: sql-sop
+  name: sql-sop
+  description: Fast rule-based SQL linter
+  entry: sql-sop check
+  language: python
+  types: [sql]
+  require_serial: false

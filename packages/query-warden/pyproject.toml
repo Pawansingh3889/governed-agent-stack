@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "query-warden"
+version = "0.1.0"
+description = "Role-based access control for SQL queries. Decide whether a role may run a query before it touches the database, on-prem."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+authors = [{ name = "Pawan Singh Kapkoti" }]
+keywords = ["sql", "rbac", "access-control", "sqlglot", "governance", "agent", "mcp", "on-prem"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Database",
+    "Topic :: Security",
+]
+dependencies = [
+    "sqlglot>=23.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+query-warden = "query_warden.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/Pawansingh3889/query-warden"
+Repository = "https://github.com/Pawansingh3889/query-warden"
+"Governed Agent Stack" = "https://github.com/Pawansingh3889/governed-agent-stack"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/query_warden"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/query_warden", "README.md", "LICENSE", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

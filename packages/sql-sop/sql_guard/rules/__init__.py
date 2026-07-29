@@ -1,0 +1,172 @@
+"""Rule registry — auto-discovers all rules."""
+
+from __future__ import annotations
+
+from sql_guard.rules.base import Rule
+from sql_guard.rules.errors import (
+    AlterAddNotNullNoDefault,
+    DeleteWithoutWhere,
+    DropColumn,
+    DropWithoutIfExists,
+    GrantRevoke,
+    InsertWithoutColumns,
+    StringConcatInWhere,
+    UpdateFromImplicitJoin,
+    UpdateWithoutWhere,
+)
+from sql_guard.rules.warnings import (
+    AssertionMalformed,
+    CaseWithoutElse,
+    CommentedOutCode,
+    CountDistinctUnbounded,
+    CrossJoinExplicit,
+    FunctionOnIndexedColumn,
+    GroupByOrdinal,
+    HardcodedValues,
+    HavingWithoutGroupBy,
+    JoinFunctionOnColumn,
+    LeadingWildcardLike,
+    MissingLimit,
+    MissingSemicolon,
+    MissingTableAlias,
+    MixedCaseKeywords,
+    NotInWithSubquery,
+    OrAcrossColumns,
+    OrderByWithoutLimit,
+    ScalarUdfInWhere,
+    SelectDistinctSuspicious,
+    SelectStar,
+    SubqueryCouldBeJoin,
+    TruncateTable,
+    UnionWithoutAll,
+    WindowMissingPartition,
+)
+from sql_guard.rules.structural import (
+    DeeplyNestedSubquery,
+    ImplicitCrossJoin,
+    UnusedCTE,
+)
+from sql_guard.rules.tsql import (
+    CreateIndexWithoutOnline,
+    CursorDeclaration,
+    DeprecatedOuterJoin,
+    SelectStarInto,
+    WithNolock,
+    XpCmdshell,
+)
+from sql_guard.rules.contracts import (
+    CONTRACT_RULE_CLASSES,
+    ColumnNotInContract,
+    NotNullViolation,
+    PrimaryKeyMissingOnInsert,
+    TableNotInContract,
+    UnmappedForeignKey,
+    build_contract_rules,
+)
+
+__all__ = [
+    "ALL_RULES",
+    "CONTRACT_RULE_CLASSES",
+    "ColumnNotInContract",
+    "NotNullViolation",
+    "PrimaryKeyMissingOnInsert",
+    "Rule",
+    "TableNotInContract",
+    "UnmappedForeignKey",
+    "build_contract_rules",
+    "get_rules",
+]
+
+ALL_RULES: list[Rule] = [
+    # Errors (E001-E009)
+    DeleteWithoutWhere(),
+    DropWithoutIfExists(),
+    GrantRevoke(),
+    StringConcatInWhere(),
+    InsertWithoutColumns(),
+    UpdateWithoutWhere(),
+    AlterAddNotNullNoDefault(),
+    DropColumn(),
+    UpdateFromImplicitJoin(),
+    # Warnings (W001-W023 with gaps)
+    SelectStar(),
+    MissingLimit(),
+    FunctionOnIndexedColumn(),
+    MissingTableAlias(),
+    SubqueryCouldBeJoin(),
+    OrderByWithoutLimit(),
+    HardcodedValues(),
+    MixedCaseKeywords(),
+    MissingSemicolon(),
+    CommentedOutCode(),
+    UnionWithoutAll(),
+    GroupByOrdinal(),
+    WindowMissingPartition(),
+    CaseWithoutElse(),
+    JoinFunctionOnColumn(),
+    NotInWithSubquery(),
+    LeadingWildcardLike(),
+    OrAcrossColumns(),
+    CountDistinctUnbounded(),
+    SelectDistinctSuspicious(),
+    TruncateTable(),
+    HavingWithoutGroupBy(),
+    CrossJoinExplicit(),
+    ScalarUdfInWhere(),
+    AssertionMalformed(),
+    # Structural (S001-S003)
+    ImplicitCrossJoin(),
+    DeeplyNestedSubquery(),
+    UnusedCTE(),
+    # T-SQL specific (T001-T006)
+    WithNolock(),
+    XpCmdshell(),
+    CursorDeclaration(),
+    DeprecatedOuterJoin(),
+    CreateIndexWithoutOnline(),
+    SelectStarInto(),
+]
+
+
+def build_dbt_rules(project: "DbtProject") -> list[Rule]:  # noqa: F821 -- forward reference
+    """Construct the dbt-aware rule pack with a discovered project.
+
+    Each rule needs the project to look up schema.yml entries, model
+    paths, etc. The pack is opt-in via the ``--dbt`` CLI flag, so this
+    helper is only invoked when a project was actually discovered.
+    """
+    from sql_guard.rules.dbt import ModelWithoutTest
+
+    return [ModelWithoutTest(project)]
+
+
+def get_rules(
+    enabled_ids: set[str] | None = None,
+    disabled_ids: set[str] | None = None,
+    contract: "Contract | None" = None,  # noqa: F821 -- forward reference
+    dbt_project: "DbtProject | None" = None,  # noqa: F821 -- forward reference
+) -> list[Rule]:
+    """Return filtered list of rules based on config.
+
+    If ``contract`` is provided, contract-aware rules (C001-...) are
+    instantiated with that contract and appended. Without a contract they
+    are silent and not registered.
+
+    If ``dbt_project`` is provided, dbt-aware rules (DBT001-...) are
+    instantiated with that project and appended. Same opt-in shape.
+    """
+    rules = list(ALL_RULES)
+    if contract is not None:
+        rules = rules + list(build_contract_rules(contract))
+    if dbt_project is not None:
+        rules = rules + list(build_dbt_rules(dbt_project))
+    if enabled_ids:
+        rules = [r for r in rules if r.id in enabled_ids]
+    if disabled_ids:
+        rules = [r for r in rules if r.id not in disabled_ids]
+    return rules
+
+
+# Forward imports for type hints; placed at bottom to avoid circular imports.
+from sql_guard.contracts import Contract  # noqa: E402, F401
+from sql_guard.dbt import DbtProject  # noqa: E402, F401

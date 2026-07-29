@@ -1,0 +1,82 @@
+name: test
+
+# Runs every workspace package's suite. The per-package workflows that came
+# across with each repo now live under packages/*/.github/ and are INERT --
+# GitHub only reads workflows from the root .github/workflows. This file is
+# what replaces them.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  packages:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - agent-blackbox
+          - drift-gate
+          - pii-veil
+          - query-warden
+          - schema-scout
+          - sql-explorer-mcp
+          - sql-sop
+          - sql-steward
+    name: ${{ matrix.package }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Sync workspace
+        run: uv sync --all-packages --all-extras
+
+      - name: Test ${{ matrix.package }}
+        working-directory: packages/${{ matrix.package }}
+        run: uv run --no-sync pytest
+
+  # The workspace must stay resolvable as a whole, not just package by package.
+  # A cross-component version conflict shows up here and nowhere else.
+  workspace:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Lock is current
+        run: uv lock --check
+
+      - name: Sync everything together
+        run: uv sync --all-packages --all-extras
+
+      - name: Every package imports
+        run: |
+          uv run --no-sync python - <<'PY'
+          import importlib, sys
+          mods = [
+              "agent_blackbox", "drift_gate", "pii_veil", "query_warden",
+              "schema_scout", "sql_explorer_mcp.server", "sql_guard",
+              "sql_steward.server",
+          ]
+          bad = []
+          for m in mods:
+              try:
+                  importlib.import_module(m)
+                  print(f"  ok   {m}")
+              except Exception as e:
+                  print(f"  FAIL {m}: {type(e).__name__}: {e}")
+                  bad.append(m)
+          sys.exit(1 if bad else 0)
+          PY

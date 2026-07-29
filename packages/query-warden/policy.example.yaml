@@ -1,0 +1,24 @@
+# query-warden access policy.
+# Map roles to the data they may read. Anything outside a role's allow-list is
+# denied before the query runs.
+
+default_role: operator
+
+# Optional: name groups of tables so roles can allow a whole domain at once.
+domains:
+  production: [production, prod_runs, waste_log]
+  orders: [orders, prod_despatch]
+  compliance: [prod_non_conformance, prod_temperature_logs]
+  staff: [staff, prod_shifts]
+
+roles:
+  operator:
+    allow_domains: [production, compliance]
+    deny_columns: [hourly_rate, salary]      # never expose pay to the floor
+
+  shift_lead:
+    allow_domains: [production, orders, compliance]
+    deny_columns: [salary]
+
+  analyst:
+    allow_tables: ["*"]                       # read anything

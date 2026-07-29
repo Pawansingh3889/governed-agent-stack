@@ -1,0 +1,28 @@
+# Paste into governed-agent-stack/stack.yaml.
+#
+# The stack enforces its component rules as policy-as-code in policies/.
+# A new component has to pass the same check it asks of everything else,
+# so this entry is part of shipping drift-gate, not paperwork afterwards.
+
+- name: drift-gate
+  layer: foundations
+  repo: https://github.com/Pawansingh3889/drift-gate
+  package: drift-gate            # PyPI
+  license: MIT
+  summary: >
+    Refuse to run against a schema you have not verified. Compares a live
+    schema-scout catalog against a sealed baseline, applies a policy you
+    wrote, and exits non-zero when something breaking has moved.
+  properties:
+    on_prem: true
+    network_calls: false
+    llm: false
+    writes_to_database: false
+    single_purpose: true
+    auditable: true              # via agent-blackbox when configured
+  composes_with:
+    - schema-scout               # produces the catalogs it compares
+    - agent-blackbox             # records every verdict
+  position: >
+    Runs before every other layer. schema-scout answers "what is in there";
+    drift-gate answers "is it still what you checked".
