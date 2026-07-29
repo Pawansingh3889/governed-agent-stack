@@ -1,0 +1,65 @@
+# drift-gate policy
+#
+# Copy to drift-policy.yml and edit. The real one is gitignored, because a
+# policy names the tables you care about and that is a map of your schema.
+#
+# Read this file top to bottom before you trust a run. If you cannot explain
+# every line to whoever signs the export, the policy is wrong.
+#
+# Check kinds not listed in fail_on or warn_on default to FAIL. That is
+# deliberate: an unclassified change is an unreviewed change. Set
+# `default_severity: warn` to loosen it, and know that you did.
+
+fail_on:
+  # Structure that disappeared. If the exporter reads it, it is now broken.
+  - table_dropped
+  - column_dropped
+
+  # Capacity that shrank. This is the one that corrupts silently rather than
+  # crashing: DECIMAL(10,2) -> INT truncates a yield figure without an error,
+  # and the CSV still looks fine on the USB stick.
+  - type_narrowed
+  - type_family_changed
+  - type_changed_unknown
+
+  # Identity moved.
+  - pk_changed
+
+  # A column schema-scout did not previously consider personal now is.
+  # Review before anything reads that table again.
+  - pii_added
+
+warn_on:
+  - table_added
+  - column_added
+  - type_widened
+  - nullable_added        # NOT NULL -> NULL: your code may assume presence
+  - nullable_removed
+  - row_count_shift: 40%  # below this, silent
+
+ignore:
+  tables:
+    - "staging_*"
+    - "tmp_*"
+    - "*_audit_archive"
+  columns:
+    - "modifieddate"
+    - "rowversion"
+    - "lastupdated*"
+
+# The watch list overrides everything above, including ignore rules.
+# ANY change to a watched target fails, whatever the global policy says.
+#
+# Put the columns your exporter actually reads here, and nothing else. An
+# over-broad watch list produces noise, gets ignored, and then the gate is
+# decoration. Empty column list = the whole table is watched.
+watch:
+  # ProductionRuns:
+  #   - RunID
+  #   - RunNo
+  #   - ProductCode
+  #   - YieldKg
+  #   - QCStatus
+  #   - StartTime
+  #   - EndTime
+  # Batches: []          # entire table

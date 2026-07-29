@@ -1,0 +1,20 @@
+# pr-sop — PR governance checks (https://github.com/Pawansingh3889/pr-sop)
+checks:
+  changelog_required:
+    severity: error
+    paths:
+      - "src/**/*.py"
+
+  version_consistency:
+    severity: error
+    sources:
+      - file: pyproject.toml
+        pattern: '^version\s*=\s*"([^"]+)"'
+      - file: src/drift_gate/__init__.py
+        pattern: '^__version__\s*=\s*"([^"]+)"'
+
+  precommit_rev_matches_tag:
+    severity: warning
+    files:
+      - README.md
+      - .pre-commit-config.yaml

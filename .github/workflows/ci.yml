@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -e ".[dev]"
+      - run: ruff check .
+      - run: pytest -q --cov=drift_gate --cov-report=term-missing
+
+  # The seven invariants in RULES.md are the product. Run them as their own
+  # job so a red X says "a guarantee broke", not "a test failed".
+  invariants:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - name: Rule 1 — self-contained report, no network
+        run: pytest -q tests/test_manifest_and_cli.py -k report_is_self_contained
+      - name: Rule 2 — unclassified change kinds fail closed
+        run: pytest -q tests/test_catalog_and_policy.py -k unclassified_kind_defaults_to_fail
+      - name: Rule 3 — watch list overrides warn and ignore
+        run: pytest -q tests/test_catalog_and_policy.py -k "watch_list_overrides"
+      - name: Rule 4 — audit requested but unavailable refuses to run
+        run: pytest -q tests/test_manifest_and_cli.py -k audit_requested_but_unavailable
+      - name: Rule 5 — cannot-run exits 2, not 1
+        run: pytest -q tests/test_manifest_and_cli.py -k "exits_two"
+      - name: Rule 6 — empty catalog is an error, never a pass
+        run: pytest -q tests/test_catalog_and_policy.py -k rejects_empty_catalog
+      - name: Rule 7 — ambiguous type changes classified as breaking
+        run: pytest -q tests/test_types.py -k TestNarrowing
+
+  end-to-end:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e .
+      - name: seal, drift, and exit codes
+        run: |
+          set -u
+          mkdir -p /tmp/b
+          cat > /tmp/b/catalog.json <<'JSON'
+          {"tables":{"dbo.Runs":{"row_count":10,"primary_key":["Id"],"columns":[
+            {"name":"Id","type":"int","is_nullable":"NO"},
+            {"name":"YieldKg","type":"decimal(10,2)","is_nullable":"NO"}]}}}
+          JSON
+          sed 's/decimal(10,2)/int/' /tmp/b/catalog.json > /tmp/live.json
+          cp drift-policy.example.yml /tmp/policy.yml
+          drift-gate seal --baseline /tmp/b
+
+          drift-gate check -b /tmp/b -l /tmp/b/catalog.json -p /tmp/policy.yml
+          echo "clean run exited $? (expected 0)"
+
+          set +e
+          drift-gate check -b /tmp/b -l /tmp/live.json -p /tmp/policy.yml
+          [ $? -eq 1 ] || { echo "expected exit 1 on drift"; exit 1; }
+
+          echo tampered >> /tmp/b/catalog.json
+          drift-gate check -b /tmp/b -l /tmp/live.json -p /tmp/policy.yml
+          [ $? -eq 2 ] || { echo "expected exit 2 on broken seal"; exit 1; }
+          echo "exit codes correct"
