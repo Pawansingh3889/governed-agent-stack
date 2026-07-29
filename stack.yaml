@@ -10,6 +10,12 @@ components:
     on_prem: true
     role: schema-discovery
 
+  - name: drift-gate
+    repo: https://github.com/Pawansingh3889/drift-gate
+    license: MIT
+    on_prem: true
+    role: schema-drift-detection
+
   - name: sql-explorer-mcp
     repo: https://github.com/Pawansingh3889/sql-explorer-mcp
     license: MIT

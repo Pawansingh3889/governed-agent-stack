@@ -12,6 +12,7 @@ allowed_licenses := {"MIT", "Apache-2.0"}
 # and single-purpose rather than a free-text grab bag.
 allowed_roles := {
 	"schema-discovery",
+	"schema-drift-detection",
 	"read-only-access",
 	"sql-linting",
 	"access-control",

@@ -12,7 +12,7 @@ Nobody packages this free and on-prem. That is the whole point.
 
 | Layer | Tool | Job |
 |---|---|---|
-| **Foundations** | [schema-scout](https://github.com/Pawansingh3889/schema-scout) | Map the database, recover undeclared relationships, flag PII, and score how ready the schema actually is for an agent. |
+| **Foundations** | [schema-scout](https://github.com/Pawansingh3889/schema-scout) + [drift-gate](https://github.com/Pawansingh3889/drift-gate) | Map the database, recover undeclared relationships, flag PII, and score how ready the schema actually is for an agent — then refuse to run once that schema moves without review. |
 | **Scoped access** | [sql-explorer-mcp](https://github.com/Pawansingh3889/sql-explorer-mcp) + [sql-sop](https://github.com/Pawansingh3889/sql-guard) + [query-warden](https://github.com/Pawansingh3889/query-warden) | Give the agent read-only SQL access: every query is parsed, linted, and checked against role-based access rules before it runs. |
 | **Reasoning** | [FloorMind](https://github.com/Pawansingh3889/FloorMind) | Turn a plain-English question into a checked query and a plain-English answer. |
 | **Result masking** | [pii-veil](https://github.com/Pawansingh3889/pii-veil) | Mask any PII that survives into result rows before they reach the model. |
@@ -85,6 +85,7 @@ Each tool is its own repo with its own docs. Start with whichever problem is mos
 
 - **[sql-steward](https://github.com/Pawansingh3889/sql-steward)** (flagship): one governed MCP server where the agent never writes SQL. Queries are compiled from a semantic layer you control, multi-dialect (SQL Server, Postgres, SQLite), with optional role checks, masking, and audit wired in.
 - **[schema-scout](https://github.com/Pawansingh3889/schema-scout)**: maps a SQL Server database, recovers hidden foreign keys, flags PII, scores agent-readiness, and serves the catalog to an agent over MCP.
+- **[drift-gate](https://github.com/Pawansingh3889/drift-gate)**: compares the live schema against a baseline you sealed by hand and exits non-zero when something breaking has moved. No model, no network — it answers "is it still what you checked".
 - **[sql-explorer-mcp](https://github.com/Pawansingh3889/sql-explorer-mcp)**: read-only Model Context Protocol server for SQL Server, Postgres, and SQLite, with three layers of safety.
 - **[sql-sop](https://github.com/Pawansingh3889/sql-guard)**: a fast rule-based SQL linter (available on [PyPI](https://pypi.org/project/sql-sop/)) that catches dangerous and slow patterns before a query runs.
 - **[query-warden](https://github.com/Pawansingh3889/query-warden)**: role-based access control for SQL. Decides whether the asker's role may touch the tables and columns a query references, before it runs.
@@ -94,7 +95,7 @@ Each tool is its own repo with its own docs. Start with whichever problem is mos
 
 ## Status
 
-All eight components are public and usable today, including the [sql-steward](https://github.com/Pawansingh3889/sql-steward) flagship that bundles them. This repo is the map that ties them together, not a separate install. Pick the layers you need, or start with sql-steward.
+All nine components are public and usable today, including the [sql-steward](https://github.com/Pawansingh3889/sql-steward) flagship that bundles them. This repo is the map that ties them together, not a separate install. Pick the layers you need, or start with sql-steward.
 
 ## Governance
 
