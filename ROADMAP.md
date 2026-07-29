@@ -4,8 +4,9 @@ A short, honest view of where the stack is going. Dates are intentions, not prom
 
 ## Now
 
-- All nine components public and usable; `sql-steward` (the flagship) at v0.2.0.
+- All eleven components public and usable; `sql-steward` (the flagship) at v0.2.0.
 - `sql-sop` and `sql-sop-mcp` published on PyPI.
+- `thread-recall` (governed agent memory) released and in the workspace.
 - Governance is enforced as policy-as-code in this repo (see [GOVERNANCE.md](GOVERNANCE.md)).
 
 ## Next (roughly the next three months)
@@ -20,7 +21,6 @@ A short, honest view of where the stack is going. Dates are intentions, not prom
 
 ## Later
 
-- **`thread-recall`** (governed agent memory) public release.
 - Broader SQL dialect coverage across the stack.
 
 ## Out of scope

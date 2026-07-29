@@ -28,7 +28,9 @@ jobs:
           - schema-scout
           - sql-explorer-mcp
           - sql-sop
+          - sql-sop-mcp
           - sql-steward
+          - thread-recall
     name: ${{ matrix.package }}
     steps:
       - uses: actions/checkout@v4
