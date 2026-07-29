@@ -26,6 +26,7 @@ members = [
     "sql-sop",
     "sql-sop-mcp",
     "sql-steward",
+    "thread-recall",
 ]
 
 [[package]]
@@ -1813,6 +1814,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pgvector"
+version = "0.5.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a7/ec/6eb80aebc728200f95229219882994c1b0585b956ca47da5edb9d062627a/pgvector-0.5.0.tar.gz", hash = "sha256:07a9dcf735696879406983afc6eba9a787cef7c0cf6c367ca1a5779f036dee74", size = 35170, upload-time = "2026-07-06T18:27:27.767Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5c/e4/a5573f2c579ca9ad133293bfb624148ba0893674ca4a6eeec85ced9a6a09/pgvector-0.5.0-py3-none-any.whl", hash = "sha256:fedc9800894e6da2be51358d7b7c574bf34f247ca741a5a09513622135f5964f", size = 30958, upload-time = "2026-07-06T18:27:26.797Z" },
+]
+
+[[package]]
 name = "phonenumbers"
 version = "9.0.35"
 source = { registry = "https://pypi.org/simple" }
@@ -3574,6 +3584,40 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/05/ef/a82214bb7c7c1e2d92b69e1a7654be90cfab180082c6108e45a98af2422c/thinc-8.3.13-cp314-cp314-win_amd64.whl", hash = "sha256:433e3826e018da489f1a8068e6de677f6eff3cc93991a599d90f12cd1bc26cdc", size = 1740382, upload-time = "2026-03-23T07:22:32.869Z" },
     { url = "https://files.pythonhosted.org/packages/9f/ef/1648fda54e9689058335ff54f650a7a314db2a42e21af1b83949b2dc748e/thinc-8.3.13-cp314-cp314-win_arm64.whl", hash = "sha256:11754fada9ad5ba2e02d5f3f234f940e24015b82333db58372f4a6aedad9b43f", size = 1667687, upload-time = "2026-03-23T07:22:34.967Z" },
 ]
+
+[[package]]
+name = "thread-recall"
+version = "0.1.1"
+source = { editable = "packages/thread-recall" }
+
+[package.optional-dependencies]
+dev = [
+    { name = "pytest" },
+    { name = "ruff" },
+]
+mask = [
+    { name = "pii-veil" },
+]
+mcp = [
+    { name = "fastmcp" },
+]
+postgres = [
+    { name = "pgvector" },
+    { name = "psycopg", extra = ["binary"] },
+    { name = "sqlalchemy" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fastmcp", marker = "extra == 'mcp'", specifier = ">=2.0" },
+    { name = "pgvector", marker = "extra == 'postgres'", specifier = ">=0.2" },
+    { name = "pii-veil", marker = "extra == 'mask'", editable = "packages/pii-veil" },
+    { name = "psycopg", extras = ["binary"], marker = "extra == 'postgres'", specifier = ">=3.1" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4" },
+    { name = "sqlalchemy", marker = "extra == 'postgres'", specifier = ">=2.0" },
+]
+provides-extras = ["postgres", "mask", "mcp", "dev"]
 
 [[package]]
 name = "tldextract"

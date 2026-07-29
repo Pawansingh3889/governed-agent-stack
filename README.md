@@ -17,6 +17,7 @@ Nobody packages this free and on-prem. That is the whole point.
 | **Reasoning** | [FloorMind](https://github.com/Pawansingh3889/FloorMind) | Turn a plain-English question into a checked query and a plain-English answer. |
 | **Result masking** | [pii-veil](https://github.com/Pawansingh3889/pii-veil) | Mask any PII that survives into result rows before they reach the model. |
 | **Accountability** | [agent-blackbox](https://github.com/Pawansingh3889/agent-blackbox) | Record every step in a tamper-evident, hash-chained log you can verify later. |
+| **Memory** | [thread-recall](https://github.com/Pawansingh3889/thread-recall) | Carry context between turns without carrying PII with it — masked on write, so the long-term store never retains what the policy refuses. |
 
 ## Flagship: sql-steward
 
@@ -48,11 +49,15 @@ flowchart TB
     VEIL["pii-veil<br/>mask PII in results"]
     A["Answer + chart"]
     BB["agent-blackbox<br/>tamper-evident log"]
+    TR["thread-recall<br/>memory, PII masked on write"]
     ST["sql-steward<br/>all-in-one gateway:<br/>agent never writes SQL"]
 
     SS -- schema context --> AG
     AG -- generated SQL --> SOP --> WARD --> EX --> DB
     DB -- rows --> VEIL --> AG --> A
+
+    AG -. remembers .-> TR
+    TR -. recalls .-> AG
 
     Q -. or, one governed gateway .-> ST
     ST -- compiled SQL --> DB

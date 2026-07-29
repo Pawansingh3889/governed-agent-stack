@@ -20,6 +20,7 @@ allowed_roles := {
 	"audit",
 	"governed-query-gateway",
 	"reasoning-application",
+	"agent-memory",
 }
 
 # Every component must declare a license.

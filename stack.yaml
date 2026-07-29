@@ -63,3 +63,9 @@ components:
     license: MIT
     on_prem: true
     role: sql-linting
+
+  - name: thread-recall
+    repo: https://github.com/Pawansingh3889/thread-recall
+    license: MIT
+    on_prem: true
+    role: agent-memory
