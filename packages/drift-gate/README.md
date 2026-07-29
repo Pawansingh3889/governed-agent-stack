@@ -26,6 +26,8 @@ pip install "drift-gate[scout]"        # + capture a live catalog from SQL Serve
 pip install "drift-gate[audit]"        # + tamper-evident ledger via agent-blackbox
 ```
 
+Not on PyPI yet — until it is, install from a clone with `pip install -e ".[scout,audit]"`.
+
 Extras are declared, not implied. If you set `DRIFT_GATE_AUDIT_DB` without installing `[audit]`, drift-gate **refuses to run** rather than silently skipping the audit. See [RULES.md](RULES.md#rule-4).
 
 ---

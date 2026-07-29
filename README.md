@@ -97,24 +97,32 @@ Each tool is its own repo with its own docs. Start with whichever problem is mos
 - **[pii-veil](https://github.com/Pawansingh3889/pii-veil)**: masks PII in query results (Microsoft Presidio when installed, regex fallback otherwise) before they reach the model.
 - **[FloorMind](https://github.com/Pawansingh3889/FloorMind)**: an on-prem natural-language query tool for manufacturing data, eval-measured rather than vibes-based.
 - **[agent-blackbox](https://github.com/Pawansingh3889/agent-blackbox)**: an append-only, hash-chained ledger that gives agent actions a tamper-evident audit trail.
+- **[sql-sop-mcp](https://github.com/Pawansingh3889/sql-sop-mcp)**: the sql-sop linter as MCP tools, so a model checks its own SQL before proposing it rather than after someone runs it.
+- **[thread-recall](https://github.com/Pawansingh3889/thread-recall)**: governed agent memory — per-thread history and semantic recall, masked on write and namespaced per actor so one agent cannot read another's threads.
 
 ## Status
 
-All nine components are public and usable today, including the [sql-steward](https://github.com/Pawansingh3889/sql-steward) flagship that bundles them. This repo is the map that ties them together, not a separate install. Pick the layers you need, or start with sql-steward.
+All eleven components are public and usable today, including the [sql-steward](https://github.com/Pawansingh3889/sql-steward) flagship that bundles them. This repo is the map that ties them together, not a separate install. Pick the layers you need, or start with sql-steward.
 
 ## Repository layout
 
 The components live here, as a [uv workspace](https://docs.astral.sh/uv/concepts/projects/workspaces/). Each keeps its own `pyproject.toml`, its own version, and its own PyPI identity — the monorepo is a convenience for maintaining nine things, not a bundling of them into one. Nothing about installing a single component changed.
 
 ```
-packages/          eight publishable libraries
-  agent-blackbox/  drift-gate/       pii-veil/     query-warden/
-  schema-scout/    sql-explorer-mcp/ sql-sop/      sql-steward/
-apps/
-  floormind/       the Streamlit application (not a package)
-policies/          the governance rules, checked against stack.yaml
-stack.yaml         the components, as machine-readable data
+packages/           ten publishable libraries
+  agent-blackbox/   drift-gate/        pii-veil/     query-warden/
+  schema-scout/     sql-explorer-mcp/  sql-sop/      sql-sop-mcp/
+  sql-steward/      thread-recall/
+apps/               not packages, and outside the workspace
+  floormind/        the Streamlit application
+  ollama-gatekeeper/ a governance gateway in front of a local model
+  control-tower/    the registry that runs the stack — see its REGISTRY.md
+policies/           the governance rules, checked against stack.yaml
+stack.yaml          the components, as machine-readable data
 ```
+
+`make check` runs both self-checks: the governance policies against `stack.yaml`, and
+control-tower's registry against this tree. `make help` lists the rest.
 
 ```bash
 git clone https://github.com/Pawansingh3889/governed-agent-stack

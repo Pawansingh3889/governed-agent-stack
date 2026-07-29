@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sql-explorer-mcp"
-version = "0.1.0"
+version = "0.1.1"
 description = "Read-only Model Context Protocol server for SQL databases. Lets LLMs (Claude, Cursor, ChatGPT, Continue) introspect and query SQL Server, Postgres, and SQLite with multi-layer safety guards including sql-sop linting."
 readme = "README.md"
 license = "MIT"
@@ -39,10 +39,10 @@ classifiers = [
     "Topic :: Software Development :: Quality Assurance",
 ]
 dependencies = [
-    # fastmcp 3 declares its own dependencies correctly and dropped the
-    # `from mcp import McpError` path. The pydantic-settings / mcp<2 pins that
-    # worked around fastmcp 2.14.1 are obsolete, and holding the workspace at
-    # 2.14.1 broke sql-sop-mcp, which needs the fastmcp 3 tool API.
+    # fastmcp 3 or newer, not >=2: fastmcp 2.14.1 cannot import at all against
+    # a current mcp. It reads `McpError` from mcp.shared.exceptions, which mcp 2.0
+    # renamed to `MCPError`, and it imports pydantic_settings without declaring it.
+    # fastmcp 3 fixed both, so the pins that used to work around them are gone.
     "fastmcp>=3.0",
     "pydantic>=2.0",
     "sqlalchemy>=2.0",

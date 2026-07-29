@@ -1,0 +1,323 @@
+# The registry control-tower reads.
+#
+# One entry per component: how to start it, how to tell whether it is up, and
+# where to read the few numbers worth putting on a page. Nothing is
+# re-implemented here — every metric points at output the tool already writes.
+#
+# The schema is documented in REGISTRY.md and enforced by
+# scripts/check_tools_registry.py, which runs in CI. Paths are relative to the
+# monorepo root, so this file is portable across checkouts and hosts.
+
+version: 1
+
+defaults:
+  # Every run.cmd executes from the repo root unless the entry overrides `cwd`.
+  cwd: .
+  # Each component names its own ledger path through its own environment
+  # variable, and several have no default at all (drift-gate and
+  # sql-explorer-mcp write no ledger unless told where). Rather than let the
+  # tower guess, the registry *sets* them, so where a tool writes and where the
+  # metric reads are the same string in the same file. logs/ and out/ are
+  # gitignored: runtime state, not source.
+  env:
+    SQL_STEWARD_AUDIT_DB: logs/steward.db
+    SQL_STEWARD_BUDGET_DB: logs/steward-budget.db
+    SQL_EXPLORER_AUDIT_DB: logs/explorer.db
+    DRIFT_GATE_AUDIT_DB: logs/drift-gate.db
+    THREAD_RECALL_DB: logs/recall-mem.db
+    FLOORMIND_LOG_DIR: ../../logs
+    FLOORMIND_BLACKBOX_DB: ../../logs/blackbox.db
+
+# The page reads top to bottom as the story the stack tells: discover the schema,
+# scope what can be reached, reason over it, and keep the receipts.
+groups:
+  - Foundations
+  - Scoped access
+  - Reasoning
+  - Accountability
+  - Side products
+
+tools:
+  # --- Foundations --------------------------------------------------------
+  - id: schema-scout
+    name: schema-scout
+    group: Foundations
+    tier: artifact
+    desc: >-
+      Reverse-engineers a large SQL Server schema into an AI-ready catalog:
+      every table classified, relationships mapped, PII flagged.
+    run:
+      cmd: uv run --project . schema-scout --out out
+    metrics:
+      - label: tables
+        source: json_file
+        path: out/agent_context.json
+        key: summary.tables
+        optional: true
+      - label: relationships
+        source: json_file
+        path: out/agent_context.json
+        key: summary.relationships
+        optional: true
+      - label: PII columns
+        source: json_file
+        path: out/agent_context.json
+        key: summary.pii_columns
+        optional: true
+
+  - id: schema-scout-mcp
+    name: schema-scout (MCP)
+    group: Foundations
+    tier: service
+    desc: >-
+      Serves the catalog as MCP tools so an agent asks for the tables it needs
+      instead of being handed 150 of them.
+    port: 9105
+    check:
+      type: tcp
+      port: 9105
+    run:
+      cmd: uv run --project . schema-scout-mcp --catalog out/catalog.json
+    gateway:
+      # Built inside main(), not at module scope — see REGISTRY.md, "Fronting
+      # the stdio servers". Needs out/catalog.json to exist before it starts.
+      flavor: mcp-sdk
+      module: schema_scout.mcp_server
+      attr: null
+      requires: out/catalog.json
+    metrics: []
+
+  - id: drift-gate
+    name: drift-gate
+    group: Foundations
+    tier: artifact
+    desc: >-
+      Refuses to run against a schema nobody verified. Compares a live catalog
+      to a sealed baseline and applies the drift policy.
+    run:
+      cmd: uv run --project . drift-gate --version
+    metrics:
+      - label: gate runs
+        source: sqlite
+        path: logs/drift-gate.db
+        query: SELECT COUNT(*) FROM entries
+        optional: true
+      - label: last verdict
+        source: sqlite
+        path: logs/drift-gate.db
+        query: SELECT outcome FROM entries ORDER BY seq DESC LIMIT 1
+        optional: true
+
+  # --- Scoped access ------------------------------------------------------
+  - id: sql-steward
+    name: sql-steward
+    group: Scoped access
+    tier: service
+    desc: >-
+      The flagship. The agent never writes SQL: queries compile from a semantic
+      layer you control, and blocked PII is refused before the query runs.
+    port: 9101
+    check:
+      type: tcp
+      port: 9101
+    run:
+      cmd: uv run --project . sql-steward serve
+    gateway:
+      flavor: fastmcp
+      module: sql_steward.server
+      attr: mcp
+    metrics:
+      - label: audited calls
+        source: sqlite
+        path: logs/steward.db
+        query: SELECT COUNT(*) FROM entries
+        optional: true
+      - label: refusals
+        source: sqlite
+        path: logs/steward.db
+        query: SELECT COUNT(*) FROM entries WHERE outcome = 'refused'
+        optional: true
+      - label: budget spend
+        source: sqlite
+        path: logs/steward-budget.db
+        query: SELECT COUNT(*) FROM budget
+        optional: true
+
+  - id: sql-explorer-mcp
+    name: sql-explorer-mcp
+    group: Scoped access
+    tier: service
+    desc: >-
+      Read-only SQL for agents across three engines, behind three layers: a
+      read-only connection, SELECT-only validation, and the sql-sop linter.
+    port: 9102
+    check:
+      type: tcp
+      port: 9102
+    run:
+      cmd: uv run --project . sql-explorer-mcp
+    gateway:
+      flavor: fastmcp
+      module: sql_explorer_mcp.server
+      attr: mcp
+    metrics:
+      - label: audited queries
+        source: sqlite
+        path: logs/explorer.db
+        query: SELECT COUNT(*) FROM entries
+        optional: true
+
+  - id: query-warden
+    name: query-warden
+    group: Scoped access
+    tier: artifact
+    desc: >-
+      Role-based access control for SQL. Decides whether a role may run a query
+      before it touches the database.
+    run:
+      cmd: uv run --project . query-warden check --help
+    # No metrics: query-warden is a stdin/stdout CLI and writes nothing
+    # persistent, so there is no output for the tower to read. Giving it the
+    # ledger the rest of the stack already has is tracked in REGISTRY.md
+    # ("Components with nothing to read").
+    metrics: []
+
+  - id: pii-veil
+    name: pii-veil
+    group: Scoped access
+    tier: artifact
+    desc: >-
+      Masks PII in query results before they reach the model or the screen.
+      Presidio-backed, with a zero-dependency regex fallback.
+    run:
+      cmd: uv run --project . pii-veil --help
+    # Same as query-warden: nothing persistent to read yet.
+    metrics: []
+
+  # --- Reasoning ----------------------------------------------------------
+  - id: floormind
+    name: FloorMind
+    group: Reasoning
+    tier: service
+    desc: >-
+      The reasoning application the rest of the stack governs: a factory-floor
+      analyst that answers in natural language over a real plant database.
+    port: 8501
+    check:
+      type: http
+      url: http://127.0.0.1:8501/_stcore/health
+      expect_status: [200]
+    open: http://127.0.0.1:8501
+    run:
+      cwd: apps/floormind
+      cmd: streamlit run app.py
+    metrics:
+      - label: audited actions
+        source: sqlite
+        path: logs/blackbox.db
+        query: SELECT COUNT(*) FROM entries
+        optional: true
+      - label: errors
+        source: sqlite
+        path: logs/blackbox.db
+        query: SELECT COUNT(*) FROM entries WHERE outcome = 'error'
+        optional: true
+
+  - id: thread-recall-mcp
+    name: thread-recall (MCP)
+    group: Reasoning
+    tier: service
+    desc: >-
+      Governed agent memory: per-thread history and semantic recall, masked on
+      write and namespaced per actor so one agent cannot read another's threads.
+    port: 9104
+    check:
+      type: tcp
+      port: 9104
+    run:
+      cmd: uv run --project . thread-recall-mcp
+    gateway:
+      flavor: fastmcp
+      module: thread_recall.mcp_server
+      attr: mcp
+    metrics:
+      - label: memories
+        source: sqlite
+        path: logs/recall-mem.db
+        query: SELECT COUNT(*) FROM memories
+        optional: true
+      - label: threads
+        source: sqlite
+        path: logs/recall-mem.db
+        query: SELECT COUNT(DISTINCT thread_id) FROM memories
+        optional: true
+
+  - id: ollama-gatekeeper
+    name: ollama-gatekeeper
+    group: Reasoning
+    tier: artifact
+    desc: >-
+      A governance gateway in front of a local model. The model writes SQL, the
+      gateway decides what reaches the database, and every verdict is chained.
+    run:
+      cwd: apps/ollama-gatekeeper
+      cmd: python3 gateway.py
+    # Writes ledger.jsonl, which neither metric source can read. See
+    # REGISTRY.md, "Output the schema cannot read yet".
+    metrics: []
+
+  # --- Accountability -----------------------------------------------------
+  - id: sql-sop
+    name: sql-sop
+    group: Accountability
+    tier: artifact
+    desc: >-
+      Rule-based SQL linter, 38 rules. The layer every other component defers to
+      when it needs to know whether a statement is safe to run.
+    run:
+      cmd: uv run --project . sql-sop list-rules
+    metrics: []
+
+  - id: sql-sop-mcp
+    name: sql-sop (MCP)
+    group: Accountability
+    tier: service
+    desc: >-
+      The linter as MCP tools, so a model checks its own SQL before proposing it
+      rather than after someone runs it.
+    port: 9103
+    check:
+      type: tcp
+      port: 9103
+    run:
+      cmd: uv run --project . sql-sop-mcp
+    gateway:
+      flavor: fastmcp
+      module: sql_sop_mcp.server
+      attr: mcp
+    metrics: []
+
+  - id: agent-blackbox
+    name: agent-blackbox
+    group: Accountability
+    tier: artifact
+    desc: >-
+      The append-only, hash-chained ledger the rest of the stack writes through.
+      Every entries table on this page is one of these.
+    run:
+      # --db is a per-subcommand flag, not an environment variable, and
+      # agent-blackbox's CLI defaults it to ./agent_blackbox.db.
+      cmd: uv run --project . agent-blackbox stats --db logs/agent-blackbox.db
+    metrics:
+      - label: entries
+        source: sqlite
+        path: logs/agent-blackbox.db
+        query: SELECT COUNT(*) FROM entries
+        optional: true
+
+  # --- Side products ------------------------------------------------------
+  # Deliberately empty. pay-warden, viewops-survey-service,
+  # manufacturing-compliance-dashboard and warden-lm live in their own
+  # repositories, so their paths cannot be confirmed from this checkout and any
+  # entry written here would be a guess that fails the path check. REGISTRY.md
+  # carries the stub to fill in once they are alongside this tree.

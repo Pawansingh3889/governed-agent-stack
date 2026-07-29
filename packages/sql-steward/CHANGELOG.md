@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.4.1] - 2026-07-29
+
+### Changed
+- Dependency metadata only, no behaviour change. The `fastmcp` floor moved from
+  `>=2.0` to `>=3.0` when the workspace dropped its 2.14.1 pin: fastmcp 3
+  declares its own dependencies correctly, so the `pydantic-settings` and
+  `McpError` workarounds carried here are obsolete. 0.4.0 is on PyPI with the
+  old floor, so this needs a release to reach anyone installing from there.
+
 ## [0.4.0] - 2026-07-18
 
 ### Added

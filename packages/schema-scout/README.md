@@ -1,7 +1,5 @@
 # schema-scout
 
-[![PyPI](https://img.shields.io/pypi/v/schema-scout)](https://pypi.org/project/schema-scout/) [![Downloads](https://static.pepy.tech/badge/schema-scout)](https://pepy.tech/projects/schema-scout)
-
 ![CI](https://github.com/Pawansingh3889/schema-scout/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.10%E2%80%933.13-blue)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
@@ -180,7 +178,7 @@ Large schemas don't fit in a prompt. Instead of pasting 150 tables at an agent,
 run schema-scout's MCP server and let the agent ask for exactly what it needs:
 
 ```bash
-pip install "schema-scout[mcp]"
+pip install "schema-scout[mcp]"   # once published; until then: pip install -e ".[mcp]"
 schema-scout-mcp --catalog out/catalog.json
 ```
 
