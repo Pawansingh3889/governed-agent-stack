@@ -1,0 +1,25 @@
+name: Bug report
+description: Report a bug in sql-sop
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For **security** issues (rule bypass, false negative on a dangerous
+        SQL pattern), please file a
+        [private advisory](../../security/advisories/new) instead of a
+        public issue.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What's wrong?
+      description: |
+        Anything that helps us understand and reproduce. Skip anything
+        that isn't relevant.
+      placeholder: |
+        sql-sop version + Python version (if relevant)
+        What you ran
+        What you expected
+        What actually happened
