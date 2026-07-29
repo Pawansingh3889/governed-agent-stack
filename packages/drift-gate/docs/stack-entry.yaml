@@ -1,28 +1,36 @@
-# Paste into governed-agent-stack/stack.yaml.
+# Paste the `components:` block below into governed-agent-stack/stack.yaml.
 #
-# The stack enforces its component rules as policy-as-code in policies/.
-# A new component has to pass the same check it asks of everything else,
-# so this entry is part of shipping drift-gate, not paperwork afterwards.
+# The stack enforces its component rules as policy-as-code in policies/stack.rego.
+# A new component has to pass the same check it asks of everything else, so this
+# entry is part of shipping drift-gate, not paperwork afterwards.
+#
+# The shape below is the one stack.rego actually reads: on_prem and role are
+# top-level keys, not nested. Every other field is prose for humans and belongs
+# in the README, not here — stack.yaml is machine-readable data.
+#
+# PREREQUISITE: this entry does not pass policy on its own.
+#
+#   stack.rego denies any component whose `role` is not in `allowed_roles`, and
+#   none of the eight existing roles describes a drift gate. `schema-discovery`
+#   is schema-scout's (what is in there); `audit` is agent-blackbox's (what
+#   happened). drift-gate answers a third question — is it still what you
+#   checked — so it needs its own concern:
+#
+#     # policies/stack.rego
+#      allowed_roles := {
+#      	"schema-discovery",
+#     +	"schema-drift-detection",
+#      	"read-only-access",
+#      	...
+#      }
+#
+#   Add that role first, or `conftest test stack.yaml --policy policies/` fails
+#   with: component "drift-gate" has role "schema-drift-detection", which is not
+#   a recognised governance concern.
 
-- name: drift-gate
-  layer: foundations
-  repo: https://github.com/Pawansingh3889/drift-gate
-  package: drift-gate            # PyPI
-  license: MIT
-  summary: >
-    Refuse to run against a schema you have not verified. Compares a live
-    schema-scout catalog against a sealed baseline, applies a policy you
-    wrote, and exits non-zero when something breaking has moved.
-  properties:
+components:
+  - name: drift-gate
+    repo: https://github.com/Pawansingh3889/drift-gate
+    license: MIT
     on_prem: true
-    network_calls: false
-    llm: false
-    writes_to_database: false
-    single_purpose: true
-    auditable: true              # via agent-blackbox when configured
-  composes_with:
-    - schema-scout               # produces the catalogs it compares
-    - agent-blackbox             # records every verdict
-  position: >
-    Runs before every other layer. schema-scout answers "what is in there";
-    drift-gate answers "is it still what you checked".
+    role: schema-drift-detection
