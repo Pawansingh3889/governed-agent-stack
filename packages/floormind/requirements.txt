@@ -1,0 +1,28 @@
+streamlit>=1.30.0
+langgraph>=0.3
+langchain>=0.1.0
+langchain-community>=0.0.10
+langchain-core>=0.1.0
+sqlalchemy>=2.0.0
+chromadb>=0.4.0
+# Pin chromadb transitive: <1.27 ships protobuf 3.x _pb2.py files that crash on modern protobuf
+opentelemetry-exporter-otlp-proto-grpc>=1.27
+sentence-transformers>=2.2.0
+pandas>=2.0.0
+plotly>=5.18.0
+pypdf>=3.17.0
+openpyxl>=3.1.0
+ollama>=0.1.0
+pyodbc>=5.0.0
+pgvector>=0.3
+psycopg2-binary>=2.9
+pyyaml>=6.0
+sqlparse>=0.5.0
+sql-sop>=0.7.0                                                      # static SQL safety layer (Governed Agent Stack)
+agent-blackbox @ git+https://github.com/Pawansingh3889/agent-blackbox.git  # tamper-evident audit ledger (Governed Agent Stack)
+sentry-sdk>=2.22
+pytest>=7.0.0
+ruff>=0.11
+mypy>=1.15
+fastmcp>=2.0.0
+langchain-mcp-adapters>=0.2.0

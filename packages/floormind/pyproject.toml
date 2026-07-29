@@ -1,0 +1,24 @@
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"mcp_servers/*" = ["E402"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+# Custom markers for the eval harness (tests/eval/).
+# Library path runs in CI; LLM path is opt-in locally.
+markers = [
+    "eval_library: library fast-path eval — no Ollama required",
+    "eval_llm: LLM-path eval — requires Ollama with gemma3:12b on localhost",
+]
