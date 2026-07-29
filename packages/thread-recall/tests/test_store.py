@@ -83,6 +83,30 @@ def test_mask_true_is_graceful_without_pii_veil(monkeypatch):
     assert mem.count("t1") == 1
 
 
+def test_mask_survives_a_veil_that_exits_the_interpreter(monkeypatch):
+    """A failed spaCy model download raises SystemExit, not Exception.
+
+    pii-veil's presidio backend fetches a model the first time a Veil is built,
+    and spacy.cli calls sys.exit() when that fetch fails — offline, behind a
+    proxy, or in CI. SystemExit derives from BaseException, so an `except
+    Exception` guard misses it and the process dies on import. mask=True is
+    documented as optional, so it must degrade instead.
+    """
+    import types
+
+    fake = types.ModuleType("pii_veil")
+
+    def _explode(*_a, **_k):
+        raise SystemExit(1)
+
+    fake.Veil = _explode
+    monkeypatch.setitem(sys.modules, "pii_veil", fake)
+
+    mem = Memory(":memory:", mask=True)
+    mem.remember("t1", "user", "email me at a@b.com")
+    assert mem.count("t1") == 1
+
+
 def test_cosine_basics():
     assert _cosine([1, 0], [1, 0]) == 1.0
     assert _cosine([1, 0], [0, 1]) == 0.0

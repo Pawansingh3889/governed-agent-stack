@@ -189,11 +189,16 @@ def _row_to_turn(r: sqlite3.Row) -> Turn:
 
 
 def _make_veil():
+    # SystemExit is caught alongside Exception on purpose. pii-veil's presidio
+    # backend downloads a spaCy model on first construction, and spacy.cli
+    # raises SystemExit (a BaseException) when that download fails — offline, or
+    # behind a proxy, or in CI. Catching only Exception let that escape and kill
+    # the interpreter, which is the opposite of "the mask is optional".
     try:
         from pii_veil import Veil
 
         return Veil()
-    except Exception:
+    except (Exception, SystemExit):
         return None
 
 
@@ -207,5 +212,5 @@ def _make_ledger(path: str):
         if parent:
             os.makedirs(parent, exist_ok=True)
         return Ledger(path)
-    except Exception:
+    except (Exception, SystemExit):
         return None
