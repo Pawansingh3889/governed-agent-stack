@@ -4,8 +4,9 @@
   "title": "sql-steward",
   "description": "The agent never writes SQL: queries compile from a semantic layer you control, PII refused first.",
   "repository": {
-    "url": "https://github.com/Pawansingh3889/sql-steward",
-    "source": "github"
+    "url": "https://github.com/Pawansingh3889/governed-agent-stack",
+    "source": "github",
+    "subfolder": "packages/sql-steward"
   },
   "version": "0.4.1",
   "packages": [

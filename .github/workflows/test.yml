@@ -1,9 +1,9 @@
 name: test
 
 # Runs every workspace package's suite. The per-package workflows that came
-# across with each repo now live under packages/*/.github/ and are INERT --
-# GitHub only reads workflows from the root .github/workflows. This file is
-# what replaces them.
+# across with each repo were deleted once this replaced them -- GitHub only reads
+# workflows from the root .github/workflows, so they never ran here. This file
+# is what runs instead.
 
 on:
   push:
@@ -33,7 +33,7 @@ jobs:
           - thread-recall
     name: ${{ matrix.package }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
@@ -52,7 +52,7 @@ jobs:
   workspace:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
