@@ -57,3 +57,9 @@ components:
     license: Apache-2.0
     on_prem: true
     role: reasoning-application
+
+  - name: sql-sop-mcp
+    repo: https://github.com/Pawansingh3889/sql-sop-mcp
+    license: MIT
+    on_prem: true
+    role: sql-linting

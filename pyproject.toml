@@ -32,6 +32,7 @@ pii-veil = { workspace = true }
 agent-blackbox = { workspace = true }
 sql-steward = { workspace = true }
 drift-gate = { workspace = true }
+sql-sop-mcp = { workspace = true }
 
 [dependency-groups]
 dev = [

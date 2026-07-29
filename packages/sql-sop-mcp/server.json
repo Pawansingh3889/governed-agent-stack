@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.Pawansingh3889/sql-sop-mcp",
+  "description": "Lint SQL with sql-sop from any MCP-aware LLM client. 38 rules, 2 stdio tools (lint_sql, list_rules).",
+  "repository": {
+    "url": "https://github.com/Pawansingh3889/sql-sop-mcp",
+    "source": "github"
+  },
+  "version": "0.1.1",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "sql-sop-mcp",
+      "version": "0.1.1",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

@@ -28,6 +28,7 @@ jobs:
           - schema-scout
           - sql-explorer-mcp
           - sql-sop
+          - sql-sop-mcp
           - sql-steward
     name: ${{ matrix.package }}
     steps:
