@@ -1,0 +1,31 @@
+name: release sql-explorer-mcp
+
+# Publish by tagging:
+#   git tag sql-explorer-mcp-v<version> && git push origin sql-explorer-mcp-v<version>
+# The version in the tag must match packages/sql-explorer-mcp/pyproject.toml; _publish.yml
+# refuses the release if it does not.
+#
+# PyPI trusted publisher for sql-explorer-mcp (pypi.org -> the project -> Publishing):
+#   Owner: Pawansingh3889        Repository: governed-agent-stack
+#   Workflow: release-sql-explorer-mcp.yml
+#   Environment: pypi
+# Those fields must match this file exactly. They still name the old standalone
+# repository, so publishing fails with `invalid-publisher` until each one is
+# re-pointed by hand — the same failure the sql-guard -> sql-sop rename caused.
+
+on:
+  push:
+    tags:
+      - 'sql-explorer-mcp-v*'
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    uses: ./.github/workflows/_publish.yml
+    with:
+      package: sql-explorer-mcp
+    permissions:
+      contents: write   # attach artifacts to the GitHub Release
+      id-token: write   # PyPI trusted publishing and MCP Registry OIDC
