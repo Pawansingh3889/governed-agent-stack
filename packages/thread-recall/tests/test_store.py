@@ -1,4 +1,6 @@
 """Tests for the governed agent-memory store (SQLite backend)."""
+import sys
+
 from thread_recall.store import Memory, _cosine
 
 
@@ -65,8 +67,17 @@ def test_metadata_round_trips():
     assert t.metadata == {"tool": "get_metric", "rows": 3}
 
 
-def test_mask_true_is_graceful_without_pii_veil():
-    # pii-veil is optional; with it absent, mask=True must not crash and stores as-is.
+def test_mask_true_is_graceful_without_pii_veil(monkeypatch):
+    """pii-veil is optional; with it absent, mask=True must not crash and stores as-is.
+
+    Absence is simulated rather than inherited from the environment. This test
+    used to pass only because pii-veil happened not to be installed, so it
+    quietly became a no-op wherever it was — including any checkout that
+    installs the whole stack together, where the real Veil pulls in presidio
+    and tries to download a spaCy model at import. Blocking the import makes
+    the invariant hold regardless of what else is present.
+    """
+    monkeypatch.setitem(sys.modules, "pii_veil", None)
     mem = Memory(":memory:", mask=True)
     mem.remember("t1", "user", "email me at a@b.com")
     assert mem.count("t1") == 1
