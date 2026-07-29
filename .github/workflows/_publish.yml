@@ -1,0 +1,194 @@
+name: _publish
+
+# The shared publish pipeline. Every release-<package>.yml caller is a thin
+# wrapper around this file.
+#
+# Callers fire on a package-prefixed tag (sql-steward-v0.4.1). The tag selects
+# both the package and the version, and the `version` job refuses to go on if
+# the tag disagrees with that package's pyproject.toml — otherwise one
+# version's artifact ships under another version's tag.
+#
+# Why tag-push rather than the `release: published` trigger the standalone
+# repos used: with ten packages in one repository a GitHub Release carries no
+# signal about which package it belongs to. A prefixed tag does.
+#
+# Before moving this back to a bot-created tag, note that GitHub does not start
+# workflows from events made with GITHUB_TOKEN. That is how sql-sop v0.9.0 sat
+# tagged but unpublished for six weeks. These tags are pushed by a person, so
+# the event fires.
+
+on:
+  workflow_call:
+    inputs:
+      package:
+        description: Directory under packages/ to build and publish.
+        required: true
+        type: string
+
+jobs:
+  version:
+    name: Tag matches pyproject
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Compare tag against the declared version
+        id: check
+        env:
+          PACKAGE: ${{ inputs.package }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          # sql-steward-v0.4.1 -> 0.4.1. Strips through the last "-v", so a
+          # package name containing a hyphen (sql-sop-mcp) is handled too.
+          tag_version="${TAG##*-v}"
+          declared="$(python3 -c 'import tomllib,sys; print(tomllib.load(open(sys.argv[1],"rb"))["project"]["version"])' "packages/${PACKAGE}/pyproject.toml")"
+
+          if [ "$tag_version" != "$declared" ]; then
+            echo "::error::tag ${TAG} implies ${PACKAGE} ${tag_version}, but packages/${PACKAGE}/pyproject.toml declares ${declared}"
+            exit 1
+          fi
+
+          echo "version=${declared}" >> "$GITHUB_OUTPUT"
+          echo "${PACKAGE} ${declared} — tag and pyproject agree"
+
+  pypi:
+    name: Publish to PyPI
+    needs: version
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/${{ inputs.package }}/
+    permissions:
+      id-token: write   # trusted publishing: no API token anywhere
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      # Each package builds standalone: the [tool.uv.sources] workspace
+      # redirects live in the root pyproject.toml, so nothing here rewrites a
+      # published wheel's requirements back to a local path.
+      - name: Build sdist and wheel
+        working-directory: packages/${{ inputs.package }}
+        run: |
+          python -m pip install --quiet --upgrade build
+          python -m build
+          ls -lh dist/
+
+      - name: Publish
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/${{ inputs.package }}/dist
+          # Re-running a release that partly succeeded should be a no-op, not
+          # a failure.
+          skip-existing: true
+
+  mcp-registry:
+    name: Publish to MCP Registry
+    needs: [version, pypi]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write   # github-oidc proves this repo owns io.github.Pawansingh3889
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Is this package an MCP server?
+        id: detect
+        env:
+          PACKAGE: ${{ inputs.package }}
+        run: |
+          if [ -f "packages/${PACKAGE}/server.json" ]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "no packages/${PACKAGE}/server.json — not an MCP server, nothing to do"
+          fi
+
+      # server.json carries its own version field, separate from pyproject's.
+      # They drift silently and the registry then advertises a version PyPI
+      # does not have, so check rather than trust.
+      - name: server.json version matches
+        if: steps.detect.outputs.found == 'true'
+        env:
+          PACKAGE: ${{ inputs.package }}
+          EXPECTED: ${{ needs.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, sys
+
+          pkg = os.environ["PACKAGE"]
+          expected = os.environ["EXPECTED"]
+          doc = json.load(open(f"packages/{pkg}/server.json"))
+
+          bad = []
+          if doc.get("version") != expected:
+              bad.append(f"  .version = {doc.get('version')!r}")
+          for i, entry in enumerate(doc.get("packages", [])):
+              if entry.get("version") != expected:
+                  bad.append(f"  .packages[{i}].version = {entry.get('version')!r}")
+
+          if bad:
+              print(f"::error::server.json disagrees with pyproject ({expected}):")
+              print("\n".join(bad))
+              sys.exit(1)
+          print(f"server.json agrees: {expected}")
+          PY
+
+      - name: Install mcp-publisher
+        if: steps.detect.outputs.found == 'true'
+        run: |
+          set -euo pipefail
+          # Release assets are named amd64, not x86_64.
+          curl -fsSL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/').tar.gz" \
+            | tar xz mcp-publisher
+
+      - name: Publish
+        if: steps.detect.outputs.found == 'true'
+        working-directory: packages/${{ inputs.package }}
+        run: |
+          set -euo pipefail
+          "${GITHUB_WORKSPACE}/mcp-publisher" login github-oidc
+          "${GITHUB_WORKSPACE}/mcp-publisher" publish
+
+  github-release:
+    name: GitHub Release
+    needs: [version, pypi]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # create the release and attach artifacts
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Rebuild artifacts to attach
+        working-directory: packages/${{ inputs.package }}
+        run: |
+          python -m pip install --quiet --upgrade build
+          python -m build
+
+      - name: Create or update the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PACKAGE: ${{ inputs.package }}
+          VERSION: ${{ needs.version.outputs.version }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          dist="packages/${PACKAGE}/dist"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$dist"/* --clobber
+          else
+            gh release create "$TAG" \
+              --title "${PACKAGE} ${VERSION}" \
+              --generate-notes \
+              "$dist"/*
+          fi

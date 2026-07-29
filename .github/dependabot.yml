@@ -1,0 +1,38 @@
+version: 2
+
+# Promoted from packages/sql-sop/.github/dependabot.yml, which stopped being read
+# the moment sql-sop became a workspace member — GitHub only reads this file at
+# the repository root. It was the only dependabot config in the tree, so without
+# this the monorepo silently had no dependency updates at all.
+
+updates:
+  # Actions used by the root workflows. Nothing under packages/ or apps/ has
+  # workflows any more, so this directory is the whole surface.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(ci)"
+    groups:
+      actions:
+        patterns:
+          - "*"
+
+  # The workspace root holds uv.lock; each package declares its own dependencies.
+  - package-ecosystem: pip
+    directories:
+      - "/"
+      - "/packages/*"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      python-deps:
+        patterns:
+          - "*"

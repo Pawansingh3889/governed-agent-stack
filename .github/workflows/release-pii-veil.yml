@@ -1,0 +1,31 @@
+name: release pii-veil
+
+# Publish by tagging:
+#   git tag pii-veil-v<version> && git push origin pii-veil-v<version>
+# The version in the tag must match packages/pii-veil/pyproject.toml; _publish.yml
+# refuses the release if it does not.
+#
+# PyPI trusted publisher for pii-veil (pypi.org -> the project -> Publishing):
+#   Owner: Pawansingh3889        Repository: governed-agent-stack
+#   Workflow: release-pii-veil.yml
+#   Environment: pypi
+# Those fields must match this file exactly. They still name the old standalone
+# repository, so publishing fails with `invalid-publisher` until each one is
+# re-pointed by hand — the same failure the sql-guard -> sql-sop rename caused.
+
+on:
+  push:
+    tags:
+      - 'pii-veil-v*'
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    uses: ./.github/workflows/_publish.yml
+    with:
+      package: pii-veil
+    permissions:
+      contents: write   # attach artifacts to the GitHub Release
+      id-token: write   # PyPI trusted publishing and MCP Registry OIDC
