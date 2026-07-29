@@ -1,0 +1,51 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.Pawansingh3889/sql-explorer-mcp",
+  "title": "sql-explorer-mcp",
+  "description": "Read-only SQL access for LLMs. Three engines (SQL Server, Postgres, SQLite) behind three safety layers: read-only connection, SELECT-only validation, sql-sop linting.",
+  "repository": {
+    "url": "https://github.com/Pawansingh3889/sql-explorer-mcp",
+    "source": "github"
+  },
+  "version": "0.1.1",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "sql-explorer-mcp",
+      "version": "0.1.1",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "SQL_EXPLORER_CONFIG",
+          "description": "Path to the servers YAML declaring the databases to expose (default: ./servers.yaml, then ~/.sql-explorer-mcp/servers.yaml)",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "SQL_EXPLORER_POLICY",
+          "description": "Path to a query-warden policy YAML applied before every query",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "SQL_EXPLORER_ROLE",
+          "description": "Role to evaluate the policy as (defaults to the policy's default_role)",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "SQL_EXPLORER_AUDIT_DB",
+          "description": "Path to a tamper-evident agent-blackbox ledger; unset means no audit trail",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}

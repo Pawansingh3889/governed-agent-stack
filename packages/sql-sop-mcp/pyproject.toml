@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sql-sop-mcp"
-version = "0.1.2"
+version = "0.1.3"
 description = "Model Context Protocol server that exposes sql-sop's SQL linter to LLMs (Claude, Cursor, ChatGPT, Continue)."
 readme = "README.md"
 license = "MIT"
@@ -37,7 +37,11 @@ classifiers = [
 ]
 dependencies = [
     "sql-sop>=0.7.0",
-    "fastmcp>=2.0",
+    # fastmcp 3 or newer, not >=2: fastmcp 2.14.1 cannot import at all against
+    # a current mcp. It reads `McpError` from mcp.shared.exceptions, which mcp 2.0
+    # renamed to `MCPError`, and it imports pydantic_settings without declaring it.
+    # The old floor let a resolver pick a combination that dies on `import fastmcp`.
+    "fastmcp>=3.0",
     "pydantic>=2.0",
 ]
 

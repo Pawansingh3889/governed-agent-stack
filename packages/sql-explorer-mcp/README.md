@@ -2,6 +2,8 @@
 
 [![PyPI](https://img.shields.io/pypi/v/sql-explorer-mcp)](https://pypi.org/project/sql-explorer-mcp/) [![Downloads](https://static.pepy.tech/badge/sql-explorer-mcp)](https://pepy.tech/projects/sql-explorer-mcp)
 
+<!-- mcp-name: io.github.Pawansingh3889/sql-explorer-mcp -->
+
 [![PyPI](https://img.shields.io/pypi/v/sql-explorer-mcp)](https://pypi.org/project/sql-explorer-mcp/)
 [![Python](https://img.shields.io/pypi/pyversions/sql-explorer-mcp)](https://pypi.org/project/sql-explorer-mcp/)
 [![CI](https://github.com/Pawansingh3889/sql-explorer-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Pawansingh3889/sql-explorer-mcp/actions/workflows/ci.yml)

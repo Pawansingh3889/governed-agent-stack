@@ -10,3 +10,10 @@ build/
 .coverage
 htmlcov/
 .env
+
+# Runtime output. tools.yaml points every component's ledger, budget store and
+# catalog at these two directories so the tower reads from where the tools write
+# (see apps/control-tower/REGISTRY.md). Local state, never committed; `make
+# clean` removes both.
+logs/
+out/

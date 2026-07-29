@@ -67,10 +67,14 @@ jobs:
         run: |
           uv run --no-sync python - <<'PY'
           import importlib, sys
+          # Every MCP server module is listed, not just the package root. A
+          # broken fastmcp/mcp combination only shows up on `import`, so the
+          # server modules are exactly where it surfaces.
           mods = [
               "agent_blackbox", "drift_gate", "pii_veil", "query_warden",
-              "schema_scout", "sql_explorer_mcp.server", "sql_guard",
-              "sql_steward.server",
+              "schema_scout", "schema_scout.mcp_server",
+              "sql_explorer_mcp.server", "sql_guard", "sql_sop_mcp.server",
+              "sql_steward.server", "thread_recall", "thread_recall.mcp_server",
           ]
           bad = []
           for m in mods:

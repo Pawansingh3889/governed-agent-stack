@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "thread-recall"
-version = "0.1.1"
+version = "0.1.2"
 description = "Governed, on-prem conversation memory for AI agents: per-thread history and semantic recall, with optional PII masking on write and tamper-evident audit. Zero-dependency SQLite by default."
 readme = "README.md"
 license = "MIT"
@@ -42,7 +42,9 @@ postgres = ["sqlalchemy>=2.0", "psycopg[binary]>=3.1", "pgvector>=0.2"]
 mask = ["pii-veil>=0.1"]            # PII masking on write
 # audit extra returns when the audit-log package lands on PyPI (its
 # name is being settled); the lazy import picks up a GitHub install meanwhile
-mcp = ["fastmcp>=2.0"]              # expose remember/recall as MCP tools
+# fastmcp 3 or newer, not >=2: fastmcp 2.14.1 dies on `import fastmcp` against a
+# current mcp (McpError -> MCPError, plus an undeclared pydantic_settings import).
+mcp = ["fastmcp>=3.0"]              # expose remember/recall as MCP tools
 dev = ["pytest>=8.0", "ruff>=0.4"]
 
 [project.scripts]

@@ -1,7 +1,11 @@
 name: policy
 
-# Enforces the stack's own governance rules (policies/) against stack.yaml on every PR.
-# This is the one check this repo actually needs — it keeps GOVERNANCE.md honest.
+# Enforces the stack's own governance rules (policies/) against stack.yaml on every PR,
+# and checks that control-tower's registry still describes this tree. Both are the same
+# class of check: a claim this repo makes about itself, verified rather than trusted.
+# stack.yaml says what the components are; tools.yaml says where they are and what they
+# produce. A registry full of paths that no longer resolve fails silently at runtime as
+# a wall of dead dots, so it is caught here instead.
 
 on:
   push:
@@ -25,3 +29,16 @@ jobs:
 
       - name: Run governance policies
         run: conftest test stack.yaml --policy policies/
+
+  registry:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      # --with pyyaml rather than a project dependency: the validator reads the
+      # registry, it is not part of the stack the workspace resolves.
+      - name: Validate control-tower's registry
+        run: uv run --with pyyaml python scripts/check_tools_registry.py
