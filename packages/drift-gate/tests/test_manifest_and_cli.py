@@ -1,4 +1,5 @@
 import json
+import sys
 
 import pytest
 from typer.testing import CliRunner
@@ -179,8 +180,16 @@ class TestCli:
 
     def test_audit_requested_but_unavailable_refuses_to_run(self, baseline, tmp_path,
                                                             monkeypatch):
-        """The rule that makes optional auditing safe."""
+        """The rule that makes optional auditing safe.
+
+        Unavailability is simulated rather than inherited from the environment.
+        This test used to pass only because agent-blackbox happened not to be
+        installed, so it quietly became a no-op wherever it was — including any
+        checkout that installs the whole stack together. Blocking the import
+        makes the invariant hold regardless of what else is present.
+        """
         seal(baseline)
+        monkeypatch.setitem(sys.modules, "agent_blackbox", None)
         monkeypatch.setenv("DRIFT_GATE_AUDIT_DB", str(tmp_path / "audit.db"))
         r = runner.invoke(app, ["check", "-b", str(baseline),
                                 "-l", str(self._live(tmp_path)),
