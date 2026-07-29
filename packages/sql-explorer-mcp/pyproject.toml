@@ -41,6 +41,14 @@ classifiers = [
 dependencies = [
     "fastmcp>=2.0",
     "pydantic>=2.0",
+    # fastmcp 2.14.1 imports pydantic_settings without declaring it, so a clean
+    # install of fastmcp alone fails at `import fastmcp`. Declared here until
+    # upstream fixes its metadata.
+    "pydantic-settings>=2.0",
+    # mcp 2.0 renamed McpError -> MCPError. fastmcp 2.14.1 still does
+    # `from mcp import McpError` and declares only `mcp>=1.24.0`, so an
+    # unconstrained install resolves to a combination that cannot import.
+    "mcp<2",
     "sqlalchemy>=2.0",
     "pyodbc>=5.1",                # SQL Server driver
     "psycopg[binary]>=3.1",       # Postgres driver
