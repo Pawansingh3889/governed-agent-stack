@@ -72,6 +72,11 @@ uv run --directory apps/floormind streamlit run app.py
 <td><a href="https://github.com/govern-agents/thread-recall">thread-recall</a></td>
 <td>Carry context between turns without carrying PII with it, masked on write.</td>
 </tr>
+<tr>
+<td align="center">Surveys</td>
+<td><a href="https://github.com/govern-agents/elenchus">elenchus</a> + <a href="https://github.com/govern-agents/governed-agent-stack/tree/main/packages/elenchus-mcp">elenchus-mcp</a></td>
+<td>Governed survey authoring and conducting. Create, publish, and analyse surveys with an LLM-driven conversational engine that keeps the model on rails.</td>
+</tr>
 </table>
 
 ## Flagship: sql-steward
@@ -176,17 +181,25 @@ Each tool is its own repo with its own docs. Start with whichever problem is mos
 <td><a href="https://github.com/govern-agents/thread-recall"><b>thread-recall</b></a></td>
 <td>Governed agent memory, per-thread history and semantic recall, masked on write and namespaced per actor.</td>
 </tr>
+<tr>
+<td><a href="https://github.com/govern-agents/elenchus"><b>elenchus</b></a></td>
+<td>Standalone, embeddable survey service. Authors build surveys (by natural language or builder UI); respondents complete them through a conversational, LLM-driven runner that keeps the model on rails.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/govern-agents/governed-agent-stack/tree/main/packages/elenchus-mcp"><b>elenchus-mcp</b></a></td>
+<td>Model Context Protocol bridge for Elenchus. Lets an LLM create, publish, conduct, and analyse surveys through a running Elenchus instance.</td>
+</tr>
 </table>
 
 ## Repository layout
 
 ```
 governed-agent-stack/
-  packages/              ten publishable libraries
-    agent-blackbox/      drift-gate/         pii-veil/
-    query-warden/        schema-scout/       sql-explorer-mcp/
-    sql-sop/             sql-sop-mcp/        sql-steward/
-    thread-recall/
+  packages/              twelve publishable libraries
+    agent-blackbox/      drift-gate/         elenchus-mcp/
+    pii-veil/            query-warden/       schema-scout/
+    sql-explorer-mcp/    sql-sop/            sql-sop-mcp/
+    sql-steward/         thread-recall/
   apps/                  not packages, outside the workspace
     floormind/           the Streamlit + FastAPI + Next.js application
     ollama-gatekeeper/   a governance gateway in front of a local model

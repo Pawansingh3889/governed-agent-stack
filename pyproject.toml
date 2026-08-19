@@ -34,6 +34,7 @@ sql-steward = { workspace = true }
 drift-gate = { workspace = true }
 sql-sop-mcp = { workspace = true }
 thread-recall = { workspace = true }
+elenchus-mcp = { workspace = true }
 
 [dependency-groups]
 dev = [
