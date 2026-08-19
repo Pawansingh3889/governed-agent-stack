@@ -1,12 +1,19 @@
 # FloorMind on-premises deployment.
 # Inspired by PyCon DE 2026: "Building Secure Environments for CLI Code Agents" (Nezbeda).
-# - Isolated network
-# - Separate containers for app and LLM
-# - Read-only root filesystem where possible
-# - Logs persist outside containers
-# - No secrets in images (env vars only)
+#
+# Architecture:
+#   - Streamlit app (legacy, port 8501)
+#   - FastAPI backend (new, port 8000)
+#   - Next.js frontend (new, port 3000)
+#   - Ollama LLM (port 11434)
+#   - Redis for session store (port 6379)
+#
+# Usage:
+#   docker compose up -d                       # Streamlit + Ollama (legacy)
+#   docker compose --profile api up -d         # FastAPI + Next.js + Ollama + Redis
 
 services:
+  # --- Legacy Streamlit app ---
   floormind:
     build: .
     container_name: floormind-app
@@ -21,6 +28,9 @@ services:
       SENTRY_DSN: ${SENTRY_DSN:-}
       ENVIRONMENT: ${ENVIRONMENT:-production}
       MCP_ENABLED: ${MCP_ENABLED:-false}
+      FLOORMIND_DBT_ENABLED: ${FLOORMIND_DBT_ENABLED:-false}
+      FLOORMIND_DBT_PROJECT_DIR: ${FLOORMIND_DBT_PROJECT_DIR:-}
+      FLOORMIND_DBT_PROFILE_DIR: ${FLOORMIND_DBT_PROFILE_DIR:-}
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
@@ -32,7 +42,56 @@ services:
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
+    profiles: ["streamlit"]
 
+  # --- New FastAPI backend ---
+  api:
+    build: .
+    container_name: floormind-api
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    environment:
+      FLOORMIND_DB: ${FLOORMIND_DB:-sqlite:///data/demo.db}
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma3:12b}
+      REDIS_URL: redis://redis:6379
+      FLOORMIND_JWT_SECRET: ${FLOORMIND_JWT_SECRET:-floormind-dev-secret}
+      FLOORMIND_ADMIN_PASSWORD: ${FLOORMIND_ADMIN_PASSWORD:-}
+      FLOORMIND_CORS_ORIGINS: http://localhost:3000,http://localhost:8000
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      FLOORMIND_DBT_ENABLED: ${FLOORMIND_DBT_ENABLED:-false}
+      FLOORMIND_DBT_PROJECT_DIR: ${FLOORMIND_DBT_PROJECT_DIR:-}
+      FLOORMIND_DBT_PROFILE_DIR: ${FLOORMIND_DBT_PROFILE_DIR:-}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      ollama:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - floormind-net
+    restart: unless-stopped
+    profiles: ["api"]
+
+  # --- Next.js frontend ---
+  frontend:
+    build: ./frontend
+    container_name: floormind-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://api:8000
+    depends_on:
+      - api
+    networks:
+      - floormind-net
+    restart: unless-stopped
+    profiles: ["api"]
+
+  # --- Ollama LLM ---
   ollama:
     image: ollama/ollama:latest
     container_name: floormind-ollama
@@ -49,7 +108,6 @@ services:
       start_period: 60s
       retries: 3
     restart: unless-stopped
-    # Pull model on startup if not present
     entrypoint: >
       /bin/sh -c "
       ollama serve &
@@ -57,6 +115,37 @@ services:
       ollama pull ${OLLAMA_MODEL:-gemma3:12b} &&
       wait
       "
+
+  # --- Redis session store ---
+  redis:
+    image: redis:7-alpine
+    container_name: floormind-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - floormind-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+    profiles: ["api"]
+
+  # --- dbt sidecar (optional) ---
+  dbt:
+    image: python:3.11-slim
+    container_name: floormind-dbt
+    profiles: ["dbt"]
+    working_dir: /dbt
+    volumes:
+      - ${FLOORMIND_DBT_PROJECT_DIR:-./dbt-project}:/dbt:ro
+    environment:
+      DBT_PROFILES_DIR: /dbt/profiles
+    command: ["sleep", "infinity"]
+    networks:
+      - floormind-net
+    restart: unless-stopped
 
 networks:
   floormind-net:

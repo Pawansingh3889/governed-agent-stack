@@ -1,0 +1,131 @@
+trigger: none
+
+pool:
+  repositories:
+    - repository: floormind
+      connection: GitHub
+      trigger:
+        branches:
+          include:
+            - main
+            - develop
+
+resources:
+  repositories:
+    - repository: floormind
+      type: github
+      endpoint: GitHub
+      name: Pawansingh3889/governed-agent-stack
+      ref: refs/heads/main
+
+variables:
+  dockerRegistry: docker.io
+  imageRepository: DOCKERHUB_USERNAME/floormind
+  imageTag: $(Build.SourceVersion)
+
+stages:
+  - stage: Test
+    displayName: Test
+    jobs:
+      - job: Lint
+        displayName: Lint
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: "3.11"
+            displayName: Use Python 3.11
+
+          - script: |
+              pip install ruff
+              ruff check .
+            displayName: Run ruff lint
+
+      - job: Test
+        displayName: Test
+        pool:
+          vmImage: ubuntu-latest
+        strategy:
+          matrix:
+            Python311:
+              python.version: "3.11"
+            Python312:
+              python.version: "3.12"
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: $(python.version)
+            displayName: Use Python $(python.version)
+
+          - script: |
+              pip install -r requirements.txt
+              pip install pytest
+            displayName: Install dependencies
+
+          - script: python scripts/seed_demo_db.py
+            displayName: Seed demo database
+
+          - script: python -m pytest tests/test_core.py tests/unit/ -v --tb=short
+            displayName: Run tests
+
+          - script: |
+              FLOORMIND_EVAL_SKIP_LLM=1 python -m pytest tests/eval/ -v -m eval_library --tb=short
+            displayName: Run eval (library path)
+
+  - stage: Build
+    displayName: Build and Push
+    dependsOn: Test
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - job: Docker
+        displayName: Docker Build
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: Docker@2
+            displayName: Login to Docker Hub
+            inputs:
+              command: login
+              containerRegistry: DockerHub
+
+          - task: Docker@2
+            displayName: Build and push
+            inputs:
+              command: buildAndPush
+              repository: $(imageRepository)
+              containerRegistry: DockerHub
+              dockerfile: Dockerfile
+              tags: |
+                $(imageTag)
+                latest
+
+          - task: Docker@2
+            displayName: Logout
+            inputs:
+              command: logout
+              containerRegistry: DockerHub
+
+  - stage: Deploy
+    displayName: Deploy to Production
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: ECS
+        displayName: Deploy to ECS
+        pool:
+          vmImage: ubuntu-latest
+        environment: production
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AmazonECS@2
+                  displayName: Deploy to ECS
+                  inputs:
+                    awsCredentials: AWS
+                    region: eu-west-1
+                    clusterName: floormind-cluster
+                    serviceDefinitionFile: deploy/aws/ecs-service.json
+                    taskDefinition: deploy/aws/ecs-taskdef.json
+                    enableRollback: true

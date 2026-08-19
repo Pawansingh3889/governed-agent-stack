@@ -1,0 +1,31 @@
+{
+  "ServiceName": "floormind",
+  "Cluster": "floormind-cluster",
+  "TaskDefinition": "floormind",
+  "LaunchType": "FARGATE",
+  "DesiredCount": 2,
+  "NetworkConfiguration": {
+    "awsvpcConfiguration": {
+      "Subnets": ["subnet-PRIVATE_A", "subnet-PRIVATE_B"],
+      "SecurityGroups": ["sg-floormind-ecs"],
+      "AssignPublicIp": "DISABLED"
+    }
+  },
+  "LoadBalancers": [
+    {
+      "TargetGroupArn": "arn:aws:elasticloadbalancing:REGION:ACCOUNT_ID:targetgroup/floormind-tg/TG_ID",
+      "ContainerName": "floormind-app",
+      "ContainerPort": 8501
+    }
+  ],
+  "DeploymentConfiguration": {
+    "MaximumPercent": 200,
+    "MinimumHealthyPercent": 100,
+    "DeploymentCircuitBreaker": {
+      "Enable": true,
+      "Rollback": true
+    }
+  },
+  "HealthCheckGracePeriodSeconds": 60,
+  "EnableExecuteCommand": false
+}

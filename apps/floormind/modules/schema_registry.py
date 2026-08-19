@@ -4,13 +4,22 @@ For 147+ table databases, the LLM cannot hold all tables in its prompt.
 This registry tells FloorMind which tables matter for each type of question,
 so the LLM only sees 4-10 relevant tables instead of all 147.
 
+When FLOORMIND_DBT_ENABLED=true, schema information is read from the dbt
+manifest instead of (or merged with) the hardcoded registry.
+
 Configure by editing schema.yaml or setting SCHEMA_CONFIG env var.
 """
+from __future__ import annotations
+
 import os
+from typing import Any
 
 import yaml
 
+from config import DBT_ENABLED, DBT_PROFILE_DIR, DBT_PROJECT_DIR
+
 _schema = None
+_dbt_integration = None
 
 
 # Default schema for the demo SQLite database
@@ -112,6 +121,54 @@ DOMAIN_KEYWORDS = {
 }
 
 
+def get_dbt_integration():
+    """Get or create the dbt integration singleton.
+
+    Returns the DbtIntegration instance if FLOORMIND_DBT_ENABLED=true and
+    the project directory is configured, otherwise returns None.
+    """
+    global _dbt_integration
+    if not DBT_ENABLED:
+        return None
+    if not DBT_PROJECT_DIR:
+        return None
+    if _dbt_integration is not None:
+        return _dbt_integration
+
+    try:
+        from modules.dbt_integration import DbtIntegration
+
+        _dbt_integration = DbtIntegration(DBT_PROJECT_DIR, DBT_PROFILE_DIR or None)
+        if _dbt_integration.is_available():
+            return _dbt_integration
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).warning("dbt integration init failed: %s", exc)
+
+    return None
+
+
+def _merge_dbt_schema(base: dict[str, Any], domain: str) -> dict[str, Any]:
+    """Merge dbt schema into the base schema for a given domain."""
+    dbt = get_dbt_integration()
+    if dbt is None:
+        return base
+
+    dbt_schema = dbt.get_schema_for_domain(domain)
+    if not dbt_schema:
+        return base
+
+    merged = dict(base) if base else {}
+    merged_tables = dict(merged.get("tables", {}))
+    merged_tables.update(dbt_schema.get("tables", {}))
+    merged["tables"] = merged_tables
+
+    if dbt_schema.get("description") and not merged.get("description"):
+        merged["description"] = dbt_schema["description"]
+
+    return merged
+
+
 def load_schema():
     """Load schema from YAML file or use defaults."""
     global _schema
@@ -149,11 +206,13 @@ def detect_domain(question):
 
 
 def get_tables_for_domain(domain):
-    """Get table definitions for a specific domain."""
+    """Get table definitions for a specific domain.
+
+    When dbt is enabled, merges dbt model tables into the base schema.
+    """
     schema = load_schema()
-    if domain in schema:
-        return schema[domain].get("tables", {})
-    return schema.get("production", {}).get("tables", {})
+    base = schema.get(domain, schema.get("production", {}))
+    return _merge_dbt_schema(base, domain).get("tables", {})
 
 
 def get_prompt_for_question(question):
@@ -197,4 +256,10 @@ def get_all_table_names():
     for domain_data in schema.values():
         if isinstance(domain_data, dict) and "tables" in domain_data:
             tables.update(domain_data["tables"].keys())
+
+    # Add dbt model names when available
+    dbt = get_dbt_integration()
+    if dbt:
+        tables.update(dbt.list_models())
+
     return sorted(tables)

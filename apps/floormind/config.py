@@ -61,3 +61,8 @@ MCP_DB_PORT = int(os.getenv("MCP_DB_PORT", "9000"))
 MCP_DOC_HOST = os.getenv("MCP_DOC_HOST", "localhost")
 MCP_DOC_PORT = int(os.getenv("MCP_DOC_PORT", "9001"))
 MCP_ENABLED = os.getenv("MCP_ENABLED", "false").lower() == "true"
+
+# dbt Integration
+DBT_ENABLED = os.getenv("FLOORMIND_DBT_ENABLED", "false").lower() == "true"
+DBT_PROJECT_DIR = os.getenv("FLOORMIND_DBT_PROJECT_DIR", "")
+DBT_PROFILE_DIR = os.getenv("FLOORMIND_DBT_PROFILE_DIR", "")

@@ -1,14 +1,15 @@
 """Shared database connection for FloorMind. Supports SQLite and SQL Server."""
+import functools
+
 import pandas as pd
-import streamlit as st
 from sqlalchemy import create_engine, text
 
 from config import DATABASE_URL, DB_TYPE
 
 
-@st.cache_resource
+@functools.lru_cache(maxsize=1)
 def get_engine():
-    """Get or create cached SQLAlchemy engine (cached across Streamlit reruns)."""
+    """Get or create cached SQLAlchemy engine."""
     return create_engine(DATABASE_URL, echo=False)
 
 

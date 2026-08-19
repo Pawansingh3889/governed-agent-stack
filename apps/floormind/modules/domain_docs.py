@@ -7,11 +7,10 @@ rules, thresholds, and terminology without hardcoding them in Python.
 
 from __future__ import annotations
 
+import functools
 import logging
 from pathlib import Path
 from typing import Dict, Optional
-
-import streamlit as st
 
 from config import DOMAIN_DOCS_DIR
 
@@ -33,12 +32,12 @@ _DOMAIN_TO_DOC: Dict[str, str] = {
 
 
 # ---------------------------------------------------------------------------
-# Loader (cached in Streamlit)
+# Loader (framework-agnostic, cached via functools)
 # ---------------------------------------------------------------------------
 
-@st.cache_data(show_spinner=False)
+@functools.lru_cache(maxsize=32)
 def _load_domain_file(file_path: str) -> str:
-    """Read a single domain doc from disk. Cached across Streamlit reruns."""
+    """Read a single domain doc from disk. Cached across calls."""
     try:
         return Path(file_path).read_text(encoding="utf-8")
     except FileNotFoundError:
