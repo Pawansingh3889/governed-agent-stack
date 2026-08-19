@@ -11,7 +11,7 @@ Security issues do **not** go in a public GitHub issue — read [**`SECURITY.md`
 
 ## The Prime Directive
 
-**No paid APIs.** This project runs strictly on local models (Ollama), local vector search (ChromaDB), and local databases (SQLite/SQL Server). Do not submit PRs that introduce dependencies on any paid cloud AI service. See `GOVERNANCE.md` § Scope discipline for the full four-line list.
+**OpenAI-compatible LLM.** This project uses an OpenAI-compatible API for inference (OpenAI, or a local proxy like LiteLLM). Local vector search (ChromaDB) and local databases (SQLite/SQL Server). See `GOVERNANCE.md` for scope details.
 
 ## Quick Start
 
@@ -20,7 +20,7 @@ git clone https://github.com/YOUR_USERNAME/FloorMind.git
 cd FloorMind
 make setup          # Install deps + seed demo database
 make test           # Run the pytest suite
-make eval-library   # Run the fast eval (no Ollama needed)
+make eval-library   # Run the fast eval (no LLM needed)
 make run            # Start Streamlit app
 ```
 
@@ -47,14 +47,14 @@ proposal is in `GOVERNANCE.md` § Decisions.
 We are actively looking for contributions in these areas:
 
 ### High Priority
-- **Docker deployment** — Dockerfile + docker-compose with Ollama service ([#1](https://github.com/Pawansingh3889/FloorMind/issues/1))
+- **Docker deployment** — Dockerfile + docker-compose with API + frontend services
 - **More pre-built SQL patterns** — Expand the query library beyond 10 patterns ([#2](https://github.com/Pawansingh3889/FloorMind/issues/2))
 - **PostgreSQL support** — Add PostgreSQL dialect alongside SQLite and SQL Server ([#3](https://github.com/Pawansingh3889/FloorMind/issues/3))
 
 ### Medium Priority
 - **Test coverage** — Expand pytest coverage for compliance and alert modules ([#4](https://github.com/Pawansingh3889/FloorMind/issues/4))
 - **Slack/Teams webhooks** — Push alert notifications to messaging platforms ([#5](https://github.com/Pawansingh3889/FloorMind/issues/5))
-- **Model benchmarking** — Compare Ollama models on SQL generation accuracy
+- **Model benchmarking** — Compare OpenAI models on SQL generation accuracy
 
 ### Nice to Have
 - **UI/UX improvements** — Better Streamlit dashboard for factory floor use
@@ -69,7 +69,7 @@ FloorMind/
 ├── app.py                    # Streamlit app (entry point)
 ├── config.py                 # Configuration
 ├── schema.yaml               # Business domain to table mapping
-├── Modelfile                 # Custom Ollama model with baked-in schema
+├── Modelfile                 # Custom model config (if using local proxy)
 ├── Makefile                  # setup, run, test, clean commands
 ├── modules/
 │   ├── sql_agent.py          # NL to SQL (start here to understand the core)
@@ -81,7 +81,7 @@ FloorMind/
 │   ├── compliance.py         # Traceability, allergens, audit
 │   ├── alerts.py             # 5 alert types
 │   ├── waste_predictor.py    # Yield and waste analysis
-│   └── llm.py                # Ollama connection
+│   └── llm.py                # OpenAI LLM connection
 ├── tests/
 │   └── test_core.py          # 36 pytest tests
 ├── scripts/
@@ -132,7 +132,7 @@ the golden set. The workflow:
 3. **Run it.**
    ```bash
    make eval-library          # fast path
-   make eval-llm              # requires Ollama + gemma3:12b
+   make eval-llm              # requires OPENAI_API_KEY
    ```
 
 4. **When the LLM fails, log the failure mode.**
@@ -160,7 +160,7 @@ the golden set. The workflow:
 Open an issue using the bug report template. Include:
 - Steps to reproduce
 - Expected vs actual behaviour
-- Python version, OS, Ollama model
+- Python version, OS, OpenAI model used
 - Error traceback (if applicable)
 
 ## Feature Requests

@@ -36,7 +36,7 @@ class AgentState(TypedDict, total=False):
 - **Purpose**: Use LLM to generate SQL from natural language
 - **Input**: `question`, `domain`
 - **Output**: `sql`
-- **Logic**: Builds a domain-scoped prompt via `schema_registry.get_prompt_for_question()`, sends to Ollama, cleans markdown fences from response
+- **Logic**: Builds a domain-scoped prompt via `schema_registry.get_prompt_for_question()`, sends to OpenAI-compatible LLM, cleans markdown fences from response
 - **Only reached**: When `check_library` returns no match
 
 ### 4. validate_sql

@@ -19,8 +19,8 @@
       ],
       "environment": [
         {"name": "FLOORMIND_DB", "value": "mssql+pyodbc://DB_USER:DB_PASS@DB_HOST/DB_NAME?driver=ODBC+Driver+17+for+SQL+Server"},
-        {"name": "OLLAMA_BASE_URL", "value": "http://OLLAMA_HOST:11434"},
-        {"name": "OLLAMA_MODEL", "value": "gemma3:12b"},
+        {"name": "OPENAI_API_KEY", "value": "OPENAI_API_KEY_HERE"},
+        {"name": "OPENAI_MODEL", "value": "gpt-4o"},
         {"name": "ENVIRONMENT", "value": "production"},
         {"name": "SENTRY_DSN", "value": "SENTRY_DSN_HERE"}
       ],

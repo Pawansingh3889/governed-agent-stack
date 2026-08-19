@@ -26,11 +26,11 @@ body:
     id: environment
     attributes:
       label: Environment
-      description: Python version, OS, Ollama model
+      description: Python version, OS, OpenAI model
       placeholder: |
         - Python: 3.11
         - OS: Windows 11
-        - Ollama model: phi3:mini
+        - OpenAI model: gpt-4o
         - RAM: 16GB
     validations:
       required: false

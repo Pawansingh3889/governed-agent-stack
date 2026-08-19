@@ -104,9 +104,9 @@ docstrings, and scope discipline — not on code style preferences.
 FloorMind's scope is "an AI query tool for manufacturing, running on the
 user's machine". Four hard lines that won't move in this project:
 
-- **No paid APIs.** Local Ollama only. Pull requests that add OpenAI,
-  Anthropic, Gemini, or any other paid cloud inference will be closed,
-  politely, with a pointer to fork.
+- **OpenAI-compatible LLM.** Uses OpenAI API (or a local proxy like LiteLLM).
+  Pull requests that require vendor-specific SDKs beyond the OpenAI-compatible
+  interface will be closed.
 - **No data leaves the machine by default.** Telemetry is opt-in via
   Sentry `SENTRY_DSN`; nothing else phones home.
 - **Read-only to source databases.** The validator (`modules/sql_validator`)

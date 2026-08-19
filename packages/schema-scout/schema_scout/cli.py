@@ -111,7 +111,7 @@ def _run_pipeline(catalog, conn, args) -> None:
         targets = profile.select_tables_to_profile(catalog, limit=args.describe_limit)
         ok = 0
         for t in targets:
-            if semantic.describe_table(t, model=args.model, host=args.ollama_host):
+            if semantic.describe_table(t, model=args.model):
                 ok += 1
         print(f"  AI-described {ok}/{len(targets)} tables via {args.model}")
 
@@ -172,10 +172,9 @@ def _add_common(p):
         metavar="FROM,TO",
         help="print the join path between two tables, e.g. dbo.orders,dbo.customers",
     )
-    p.add_argument("--describe", action="store_true", help="AI descriptions via Ollama")
+    p.add_argument("--describe", action="store_true", help="AI descriptions via OpenAI-compatible API")
     p.add_argument("--describe-limit", type=int, default=25)
-    p.add_argument("--model", default="qwen3:14b")
-    p.add_argument("--ollama-host", default="http://localhost:11434")
+    p.add_argument("--model", default="gpt-4o")
     p.add_argument("--erd-tables", type=int, default=40, help="max tables in the ER diagram")
     p.add_argument(
         "--domains",

@@ -81,7 +81,7 @@ The initial scan scored the schema **41/100** for AI/analytics readiness — a
   |---|---|
   | schema-scout | Free (open source) |
   | Python, Git, ODBC driver | Free |
-  | Ollama + local model | Free, runs on existing hardware |
+  | OpenAI API (or local proxy) | Pay-per-use or free with local proxy |
   | SQL Server Management Studio | Free |
   | Power BI Desktop | Free (sharing needs existing Pro/Premium licences) |
 

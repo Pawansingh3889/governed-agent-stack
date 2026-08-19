@@ -79,7 +79,7 @@ flowchart TB
 
 ## Why on-prem, why free
 
-- **Nothing leaves the building.** The database, the local LLM (Ollama), and the logs all stay on your hardware. That is the whole reason this exists for regulated or privacy-sensitive data.
+- **Nothing leaves the building.** The database, the LLM (via OpenAI-compatible API or local proxy), and the logs all stay on your hardware. That is the whole reason this exists for regulated or privacy-sensitive data.
 - **Read-only by enforcement, not by trust.** Three layers have to agree before a query runs, so a misconfigured login is not your only protection.
 - **Auditable by design.** The log is tamper-evident, so "what did the agent do" has a real, checkable answer.
 - **No licence cost, no per-seat fee, no vendor lock-in.** Clone the pieces you need and run them.

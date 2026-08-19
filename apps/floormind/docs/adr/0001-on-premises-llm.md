@@ -1,6 +1,6 @@
-# 1. On-premises LLM instead of a cloud API
+# 1. LLM provider: OpenAI-compatible API
 
-Status: Accepted
+Status: Accepted (supersedes original Ollama decision)
 
 ## Context
 
@@ -11,48 +11,33 @@ major UK retailer codes of practice, must stay within the supplier's
 control. A factory deploying FloorMind cannot send its production data,
 or the questions operators ask about it, to a third-party API.
 
-A cloud LLM (OpenAI, Anthropic, Google) would be cheaper to integrate
-and stronger per token. But every prompt would carry schema fragments
-and operator questions off-site, and every answer would be generated
-on infrastructure the supplier does not control. For an audited food
-manufacturer that is a non-starter regardless of the vendor's data
-policy — the auditor's question is "can the data leave?", not "does
-the vendor promise not to look".
+The original decision (ADR 0001) ran the LLM entirely on-premises via
+Ollama with Gemma 3 12B. This served the on-prem requirement but
+limited model quality to what a 12B local model could achieve.
 
 ## Decision
 
-Run the LLM entirely on-premises via [Ollama](https://ollama.com),
-defaulting to **Gemma 3 12B**. No prompt, completion, or telemetry
-leaves the local network at query time.
+Use an OpenAI-compatible API for LLM inference. This supports:
+- **OpenAI directly** (GPT-4o, GPT-4.1-mini) when data sensitivity allows
+- **Local proxies** (LiteLLM, OpenAI-compatible servers) for on-prem deployments
+- **Any OpenAI-compatible provider** (Azure OpenAI, etc.)
 
-Gemma 3 12B specifically because:
-
-- **Apache 2.0 weights** — commercial on-prem use with no per-seat
-  fee and no telemetry obligation.
-- **Runs on a CPU** — a 32 GB factory laptop serves it without a GPU
-  (4–15 s per query on CPU; sub-second with a modest GPU). No
-  specialised hardware procurement to deploy.
-- **`temperature=0` available** — deterministic SQL generation for
-  audit-relevant queries.
-
-The model is a configuration value (`OLLAMA_MODEL`), not a hard
-dependency, so a site can swap it for a larger or smaller model
-without code changes.
+The model is configurable via `OPENAI_MODEL` (default: `gpt-4o`).
+For on-prem, set `OPENAI_BASE_URL` to a local proxy endpoint.
 
 ## Consequences
 
-- **Good:** data never leaves the network — the claim is verifiable
-  with a packet capture, not a vendor promise. Satisfies the BRC /
-  retailer-confidentiality boundary by construction.
-- **Good:** no per-query API cost; runs disconnected.
-- **Bad:** a 12B local model is weaker than a frontier cloud model.
-  Our own eval harness shows it gets multi-column `GROUP BY` shapes
-  wrong on some questions. We accept this and mitigate with the
-  deterministic library-path for common questions, reserving the LLM
-  for the long tail.
-- **Bad:** CPU inference is seconds, not milliseconds. Acceptable for
-  an ask-a-question tool; would not be for a high-throughput service.
-- **Constraint:** model quality is now our problem to measure, not the
-  vendor's. This is why the eval harness (`tests/eval/`) exists — see
-  also the model-swap discipline of measuring against the golden set
-  before changing the pin.
+- **Good:** access to frontier model quality (GPT-4o) for complex SQL generation.
+- **Good:** single API interface works with any provider.
+- **Good:** local proxy option preserves the on-prem guarantee when needed.
+- **Good:** simpler infrastructure (no Ollama container to manage).
+- **Bad:** direct OpenAI usage sends prompts off-site (use local proxy for regulated data).
+- **Bad:** per-query API cost when using cloud providers.
+- **Constraint:** `OPENAI_API_KEY` must be set; the app fails gracefully if missing.
+
+## Migration notes
+
+- `OLLAMA_MODEL` → `OPENAI_MODEL`
+- `OLLAMA_BASE_URL` → `OPENAI_BASE_URL`
+- `ollama` Python package → `openai` Python package
+- Default model: `gemma3:12b` → `gpt-4o`

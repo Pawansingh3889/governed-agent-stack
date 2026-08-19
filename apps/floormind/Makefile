@@ -41,11 +41,11 @@ typecheck:
 typecheck-ty:
 	ty check modules/ || true
 
-# Full eval -- library path + LLM path. Requires Ollama with gemma3:12b locally.
+# Full eval -- library path + LLM path. Requires OPENAI_API_KEY.
 eval:
 	python -m pytest tests/eval/ -v
 
-# Library fast-path only -- no Ollama needed, safe to run in CI.
+# Library fast-path only -- no LLM needed, safe to run in CI.
 eval-library:
 	FLOORMIND_EVAL_SKIP_LLM=1 python -m pytest tests/eval/ -v -m eval_library
 

@@ -34,8 +34,7 @@ Windows workstation. Companion spreadsheet: `tool-installation-log.xlsx`.
 | Git for Windows | 2.54.0 | winget `Git.Git` | Clone repos, version control |
 | Python | 3.12.10 | winget `Python.Python.3.12` | Runs schema-scout |
 | ODBC Driver 18 for SQL Server | 18.x | winget `Microsoft.msodbcsql.18` | SQL Server connectivity (pyodbc) |
-| Ollama | 0.30.8 | winget `Ollama.Ollama` | Local LLM runtime (on-prem AI) |
-| qwen3:8b (model) | n/a | `ollama pull qwen3:8b` | Local model for table descriptions (~5 GB) |
+| OpenAI API key | n/a | Set `OPENAI_API_KEY` env var | LLM for table descriptions |
 | SQL Server Management Studio | `<fill: Help→About>` | winget `Microsoft.SQLServerManagementStudio` | Run SQL, review roles & access |
 | Power BI Desktop | `<fill: File→About>` | winget `Microsoft.PowerBI` | Reporting / dashboards |
 | schema-scout | source | `git clone <repo-url>` | Read-only data catalog |
@@ -46,7 +45,7 @@ Windows workstation. Companion spreadsheet: `tool-installation-log.xlsx`.
 |---|---|---|
 | pyodbc | >=5.0 | SQL Server connection (read-only) |
 | pandas | >=2.0 | Data handling / profiling |
-| requests | >=2.31 | Talks to local Ollama |
+| openai | >=1.30 | Talks to OpenAI-compatible API |
 | pytest | >=8.0 | Tests (development only) |
 
 ### Used but not downloaded (built into Windows)
@@ -65,19 +64,17 @@ Windows workstation. Companion spreadsheet: `tool-installation-log.xlsx`.
 - **Purpose:** Read-only catalog of a target database
 - **Notes:** Python deps — pyodbc>=5.0, pandas>=2.0, requests>=2.31, pytest>=8.0.
 
-### Ollama
-- **Version:** 0.30.8
-- **Install method:** winget `Ollama.Ollama`
-- **Install location:** `%LOCALAPPDATA%\Programs\Ollama`
-- **Verify command:** `ollama --version`
-- **Purpose:** Local LLM for schema-scout `--describe`; nothing leaves the machine
-- **Notes:** Model pulled: qwen3:8b. Server auto-starts at `localhost:11434`.
+### OpenAI API
+- **Install method:** Set `OPENAI_API_KEY` environment variable
+- **Verify command:** Verify API key is set
+- **Purpose:** LLM for schema-scout `--describe`; use a local proxy for on-prem
+- **Notes:** Model: gpt-4o (configurable via --model flag).
 
 ## 4. Configuration changes
 
 | Change | Command / setting | Scope | Reason |
 |---|---|---|---|
-| PATH | added Git / Python / Ollama dirs | user | tools usable in any terminal |
+| PATH | added Git / Python dirs | user | tools usable in any terminal |
 | PS execution policy | `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` | user | allow venv activation script |
 
 ## 5. Verification
@@ -85,8 +82,7 @@ Windows workstation. Companion spreadsheet: `tool-installation-log.xlsx`.
 ```text
 git --version
 python --version
-ollama --version
-ollama list          # qwen3:8b listed
+echo $OPENAI_API_KEY   # should be set
 python -m schema_scout.cli --help
 ```
 

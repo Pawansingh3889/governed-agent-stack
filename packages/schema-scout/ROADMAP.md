@@ -13,7 +13,7 @@ here is a promise with a date on it, it's the order I'd tackle things in.
 - Subject-area (domain) grouping
 - Health checks (no PK, orphan, all-null, constant, mostly-null)
 - Join-path finder between any two tables
-- On-prem table descriptions via a local Ollama model
+- On-prem table descriptions via OpenAI-compatible API
 - Outputs: self-contained HTML dashboard, JSON, Markdown, Mermaid ERD, FK-constraint SQL, dbt relationship tests
 
 ## Next
@@ -43,7 +43,7 @@ The biggest one first.
   product name that collides with a surname is not flagged), a quasi-identifier
   and k-anonymity table pass for the mosaic effect, and a greedy generalization
   suggester. Design in [docs/pii-anonymization-design.md](docs/pii-anonymization-design.md).
-- More LLM providers for the descriptions step, not just Ollama.
+- More LLM providers for the descriptions step.
 - Deeper dbt integration and an OpenMetadata export.
 - Custom, pluggable inference and classification rules.
 

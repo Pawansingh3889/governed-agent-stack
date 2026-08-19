@@ -1,12 +1,11 @@
 """
-Benchmark different Ollama models on FloorMind SQL generation tasks.
+Benchmark different OpenAI-compatible models on FloorMind SQL generation tasks.
 
 Usage:
     python scripts/benchmark_models.py
 
 Prerequisites:
-    ollama pull phi3:mini
-    ollama pull llama3.1:8b
+    export OPENAI_API_KEY=sk-...
     python scripts/seed_demo_db.py
 
 Compares accuracy, response time, and SQL quality across models.
@@ -17,11 +16,11 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-import ollama
 import pandas as pd
+from openai import OpenAI
 from sqlalchemy import create_engine
 
-from config import DATABASE_URL
+from config import DATABASE_URL, OPENAI_API_KEY, OPENAI_BASE_URL
 
 # Test questions with known correct SQL patterns
 BENCHMARK_QUESTIONS = [
@@ -91,7 +90,7 @@ Employees: EmployeeID, FullName, Role, ShiftPattern, WeeklyHours, HourlyRate
 WasteRecords: WasteID, BatchID, WasteType, QuantityKg, Reason, WasteDate"""
 
 
-def benchmark_model(model_name):
+def benchmark_model(client, model_name):
     """Run all benchmark questions against a model and score results."""
     print(f"\n{'='*60}")
     print(f"  Benchmarking: {model_name}")
@@ -102,11 +101,13 @@ def benchmark_model(model_name):
 
     # Warmup
     try:
-        ollama.chat(model=model_name, messages=[
-            {"role": "user", "content": "SELECT 1"}
-        ])
-    except Exception:
-        print(f"  ERROR: Model '{model_name}' not available. Run: ollama pull {model_name}")
+        client.chat.completions.create(
+            model=model_name,
+            messages=[{"role": "user", "content": "SELECT 1"}],
+            max_tokens=10,
+        )
+    except Exception as e:
+        print(f"  ERROR: Model '{model_name}' not available: {e}")
         return None
 
     for i, test in enumerate(BENCHMARK_QUESTIONS, 1):
@@ -114,12 +115,15 @@ def benchmark_model(model_name):
 
         start = time.perf_counter()
         try:
-            response = ollama.chat(model=model_name, messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": test["question"]}
-            ])
+            response = client.chat.completions.create(
+                model=model_name,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": test["question"]},
+                ],
+            )
             elapsed = time.perf_counter() - start
-            sql = response["message"]["content"].strip()
+            sql = (response.choices[0].message.content or "").strip()
 
             # Clean markdown
             if sql.startswith("```"):
@@ -210,31 +214,19 @@ def print_summary(all_results):
 
 
 if __name__ == "__main__":
-    models = ["phi3:mini", "llama3.1:8b", "qwen3:4b", "gemma3:4b"]
-
-    # Check which models are available
-    try:
-        result = ollama.list()
-        if isinstance(result, dict):
-            available = [m["name"] for m in result.get("models", [])]
-        else:
-            available = [m.model for m in result.models] if hasattr(result, 'models') else [m["name"] for m in result]
-    except Exception as e:
-        print(f"ERROR: Cannot connect to Ollama: {e}")
-        print("Make sure Ollama is running: ollama serve")
+    if not OPENAI_API_KEY:
+        print("ERROR: OPENAI_API_KEY is not set.")
+        print("Set it: export OPENAI_API_KEY=sk-...")
         sys.exit(1)
+
+    client = OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_BASE_URL)
+    models = ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini"]
 
     print("FloorMind Model Benchmark")
     print(f"Testing {len(BENCHMARK_QUESTIONS)} questions across {len(models)} models\n")
-    print(f"Available models: {', '.join(available)}")
 
     all_results = {}
     for model in models:
-        matching = [m for m in available if model in m]
-        if matching:
-            all_results[model] = benchmark_model(matching[0])
-        else:
-            print(f"\n  SKIP: {model} not installed. Run: ollama pull {model}")
-            all_results[model] = None
+        all_results[model] = benchmark_model(client, model)
 
     print_summary(all_results)
