@@ -10,11 +10,21 @@ import {
   ClipboardList,
   ScrollText,
   Settings,
+  MessageSquare,
+  Factory,
+  ShieldCheck,
+  Recycle,
+  FileText,
 } from "lucide-react";
 
 const nav = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
   { href: "/flow", label: "Agent Flow", icon: GitBranch },
+  { href: "/chat", label: "FloorMind Chat", icon: MessageSquare },
+  { href: "/factory", label: "Factory", icon: Factory },
+  { href: "/compliance", label: "Compliance", icon: ShieldCheck },
+  { href: "/waste", label: "Waste", icon: Recycle },
+  { href: "/documents", label: "Documents", icon: FileText },
   { href: "/schema-scout", label: "Schema Scout", icon: Database },
   { href: "/sql-steward", label: "SQL Steward", icon: Shield },
   { href: "/surveys", label: "Surveys", icon: ClipboardList },
