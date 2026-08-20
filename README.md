@@ -170,6 +170,10 @@ Each tool is its own repo with its own docs. Start with whichever problem is mos
 <td>An on-prem natural-language query tool for manufacturing data, eval-measured rather than vibes-based.</td>
 </tr>
 <tr>
+<td><a href="https://github.com/govern-agents/governed-agent-stack/tree/main/apps/dashboard"><b>dashboard</b></a></td>
+<td>A Next.js management console: overview, agent flow, per-component status pages, audit log, and configuration.</td>
+</tr>
+<tr>
 <td><a href="https://github.com/govern-agents/agent-blackbox"><b>agent-blackbox</b></a></td>
 <td>An append-only, hash-chained ledger that gives agent actions a tamper-evident audit trail.</td>
 </tr>
@@ -202,6 +206,7 @@ governed-agent-stack/
     sql-steward/         thread-recall/
   apps/                  not packages, outside the workspace
     floormind/           the Streamlit + FastAPI + Next.js application
+    dashboard/           the Next.js management console
     ollama-gatekeeper/   a governance gateway in front of a local model
     control-tower/       the registry that runs the stack
   policies/              governance rules, checked against stack.yaml
