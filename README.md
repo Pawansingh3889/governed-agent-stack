@@ -30,8 +30,31 @@ uv sync --all-packages --all-extras
 Point schema-scout at your database, then ask FloorMind a question:
 
 ```bash
-uv run --directory apps/floormind python scripts/seed_demo_db.py
-uv run --directory apps/floormind streamlit run app.py
+# 1. Install workspace dependencies
+uv sync --all-packages --all-extras
+
+# 2. Seed the demo database
+cd apps/floormind
+uv run python scripts/seed_demo_db.py
+
+# 3. Start the FloorMind API (needs OPENAI_API_KEY)
+export OPENAI_API_KEY=sk-...
+uv run uvicorn api.main:app --port 8001
+
+# 4. Start the merged console (FloorMind + surveys + audit, one UI)
+cd ../dashboard
+pnpm install
+pnpm dev --port 3002
+```
+
+Open http://localhost:3002. The console proxies both the FloorMind API and the
+elenchus survey backend server-side, so no CORS setup and no API keys in the
+browser. Login auto-skips in dev mode.
+
+The legacy single-command Streamlit UI still works:
+
+```bash
+uv run --directory apps/floormind streamlit run app.py   # http://localhost:8501
 ```
 
 ## The layers
@@ -167,11 +190,11 @@ Each tool is its own repo with its own docs. Start with whichever problem is mos
 </tr>
 <tr>
 <td><a href="https://github.com/govern-agents/governed-agent-stack/tree/main/apps/floormind"><b>FloorMind</b></a></td>
-<td>An on-prem natural-language query tool for manufacturing data, eval-measured rather than vibes-based.</td>
+<td>An on-prem natural-language query tool for manufacturing data, eval-measured rather than vibes-based. FastAPI backend with SSE streaming, REST endpoints for compliance, waste and documents.</td>
 </tr>
 <tr>
 <td><a href="https://github.com/govern-agents/governed-agent-stack/tree/main/apps/dashboard"><b>dashboard</b></a></td>
-<td>A Next.js management console: overview, agent flow, per-component status pages, audit log, and configuration.</td>
+<td>The merged console. One Next.js app for the whole stack: FloorMind chat, factory KPIs, compliance, waste, documents, elenchus surveys, component health, agent flow, audit log, and configuration. Proxies every backend server-side.</td>
 </tr>
 <tr>
 <td><a href="https://github.com/govern-agents/agent-blackbox"><b>agent-blackbox</b></a></td>
@@ -205,8 +228,8 @@ governed-agent-stack/
     sql-explorer-mcp/    sql-sop/            sql-sop-mcp/
     sql-steward/         thread-recall/
   apps/                  not packages, outside the workspace
-    floormind/           the Streamlit + FastAPI + Next.js application
-    dashboard/           the Next.js management console
+    floormind/           the FastAPI backend + legacy Streamlit UI
+    dashboard/           the merged Next.js console (FloorMind + elenchus + audit)
     ollama-gatekeeper/   a governance gateway in front of a local model
     control-tower/       the registry that runs the stack
   policies/              governance rules, checked against stack.yaml
