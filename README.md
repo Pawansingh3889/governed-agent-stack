@@ -13,9 +13,9 @@
 
 ---
 
-Every 2026 agentic-AI report lands on the same two blockers, and neither of them is the model. The first is the data underneath it: nobody mapped the database, so the agent is working blind. The second is governance around it: nothing constrains what the agent can touch, and there is no trustworthy record of what it did. Pilots stall there, not on model quality.
+Every agentic-AI pilot stalls on the same two blockers, and neither is the model: the data underneath is unmapped, so the agent works blind, and the governance around it is missing, so nothing constrains what it touches and nothing records what it did.
 
-This is a reference stack of small tools that each solve one of those problems, run entirely on your own hardware, and cost nothing. Each one stands on its own. Put together, they make up an agent you can place in front of a regulated database without losing sleep.
+This stack fixes both with small, on-prem tools that each solve one problem and cost nothing. Standalone or composed, they make an agent you can point at a regulated database without losing sleep.
 
 **Nobody packages this free and on-prem. That is the whole point.**
 
@@ -24,12 +24,7 @@ This is a reference stack of small tools that each solve one of those problems, 
 ```bash
 git clone https://github.com/govern-agents/governed-agent-stack
 cd governed-agent-stack
-uv sync --all-packages --all-extras
-```
 
-Point schema-scout at your database, then ask FloorMind a question:
-
-```bash
 # 1. Install workspace dependencies
 uv sync --all-packages --all-extras
 
@@ -47,11 +42,9 @@ pnpm install
 pnpm dev --port 3002
 ```
 
-Open http://localhost:3002. The console proxies both the FloorMind API and the
-elenchus survey backend server-side, so no CORS setup and no API keys in the
-browser. Login auto-skips in dev mode.
+Open http://localhost:3002. The console proxies every backend server-side, so no CORS setup and no API keys in the browser. Login auto-skips in dev mode.
 
-The legacy single-command Streamlit UI still works:
+Prefer a single command? The legacy Streamlit UI still works:
 
 ```bash
 uv run --directory apps/floormind streamlit run app.py   # http://localhost:8501
@@ -99,6 +92,11 @@ uv run --directory apps/floormind streamlit run app.py   # http://localhost:8501
 <td align="center">Surveys</td>
 <td><a href="https://github.com/govern-agents/elenchus">elenchus</a> + <a href="https://github.com/govern-agents/governed-agent-stack/tree/main/packages/elenchus-mcp">elenchus-mcp</a></td>
 <td>Governed survey authoring and conducting. Create, publish, and analyse surveys with an LLM-driven conversational engine that keeps the model on rails.</td>
+</tr>
+<tr>
+<td align="center">Console</td>
+<td><a href="https://github.com/govern-agents/governed-agent-stack/tree/main/apps/dashboard">dashboard</a></td>
+<td>One Next.js app over the whole stack: chat, factory KPIs, compliance, waste, documents, surveys, audit, and configuration, with every backend proxied server-side.</td>
 </tr>
 </table>
 
@@ -155,74 +153,11 @@ Use it as the all-in-one entry point, or compose the individual pieces yourself.
 </tr>
 </table>
 
-## The pieces
-
-Each tool is its own repo with its own docs. Start with whichever problem is most urgent. Usually that is schema-scout, because everything downstream depends on knowing the data first.
-
-<table>
-<tr>
-<td><a href="https://github.com/govern-agents/sql-steward"><b>sql-steward</b></a></td>
-<td>Flagship. One governed MCP server where the agent never writes SQL. Queries are compiled from a semantic layer you control, multi-dialect (SQL Server, Postgres, SQLite), with optional role checks, masking, and audit wired in.</td>
-</tr>
-<tr>
-<td><a href="https://github.com/govern-agents/schema-scout"><b>schema-scout</b></a></td>
-<td>Maps a SQL Server database, recovers hidden foreign keys, flags PII, scores agent-readiness, and serves the catalog to an agent over MCP.</td>
-</tr>
-<tr>
-<td><a href="https://github.com/govern-agents/drift-gate"><b>drift-gate</b></a></td>
-<td>Compares the live schema against a baseline you sealed by hand and exits non-zero when something breaking has moved. No model, no network.</td>
-</tr>
-<tr>
-<td><a href="https://github.com/govern-agents/sql-explorer-mcp"><b>sql-explorer-mcp</b></a></td>
-<td>Read-only Model Context Protocol server for SQL Server, Postgres, and SQLite, with three layers of safety.</td>
-</tr>
-<tr>
-<td><a href="https://github.com/govern-agents/sql-sop"><b>sql-sop</b></a></td>
-<td>A fast rule-based SQL linter that catches dangerous and slow patterns before a query runs. Available on <a href="https://pypi.org/project/sql-sop/">PyPI</a>.</td>
-</tr>
-<tr>
-<td><a href="https://github.com/govern-agents/query-warden"><b>query-warden</b></a></td>
-<td>Role-based access control for SQL. Decides whether the asker's role may touch the tables and columns a query references, before it runs.</td>
-</tr>
-<tr>
-<td><a href="https://github.com/govern-agents/pii-veil"><b>pii-veil</b></a></td>
-<td>Masks PII in query results (Microsoft Presidio when installed, regex fallback otherwise) before they reach the model.</td>
-</tr>
-<tr>
-<td><a href="https://github.com/govern-agents/governed-agent-stack/tree/main/apps/floormind"><b>FloorMind</b></a></td>
-<td>An on-prem natural-language query tool for manufacturing data, eval-measured rather than vibes-based. FastAPI backend with SSE streaming, REST endpoints for compliance, waste and documents.</td>
-</tr>
-<tr>
-<td><a href="https://github.com/govern-agents/governed-agent-stack/tree/main/apps/dashboard"><b>dashboard</b></a></td>
-<td>The merged console. One Next.js app for the whole stack: FloorMind chat, factory KPIs, compliance, waste, documents, elenchus surveys, component health, agent flow, audit log, and configuration. Proxies every backend server-side.</td>
-</tr>
-<tr>
-<td><a href="https://github.com/govern-agents/agent-blackbox"><b>agent-blackbox</b></a></td>
-<td>An append-only, hash-chained ledger that gives agent actions a tamper-evident audit trail.</td>
-</tr>
-<tr>
-<td><a href="https://github.com/govern-agents/sql-sop-mcp"><b>sql-sop-mcp</b></a></td>
-<td>The sql-sop linter as MCP tools, so a model checks its own SQL before proposing it.</td>
-</tr>
-<tr>
-<td><a href="https://github.com/govern-agents/thread-recall"><b>thread-recall</b></a></td>
-<td>Governed agent memory, per-thread history and semantic recall, masked on write and namespaced per actor.</td>
-</tr>
-<tr>
-<td><a href="https://github.com/govern-agents/elenchus"><b>elenchus</b></a></td>
-<td>Standalone, embeddable survey service. Authors build surveys (by natural language or builder UI); respondents complete them through a conversational, LLM-driven runner that keeps the model on rails.</td>
-</tr>
-<tr>
-<td><a href="https://github.com/govern-agents/governed-agent-stack/tree/main/packages/elenchus-mcp"><b>elenchus-mcp</b></a></td>
-<td>Model Context Protocol bridge for Elenchus. Lets an LLM create, publish, conduct, and analyse surveys through a running Elenchus instance.</td>
-</tr>
-</table>
-
 ## Repository layout
 
 ```
 governed-agent-stack/
-  packages/              twelve publishable libraries
+  packages/              eleven publishable libraries
     agent-blackbox/      drift-gate/         elenchus-mcp/
     pii-veil/            query-warden/       schema-scout/
     sql-explorer-mcp/    sql-sop/            sql-sop-mcp/
@@ -248,9 +183,9 @@ Security issues do **not** go in a public GitHub issue. See [SECURITY.md](SECURI
 
 ## Community
 
-- [GitHub Issues](https://github.com/govern-agents/governed-agent-stack/issues) -- bug reports and feature requests
-- [GitHub Discussions](https://github.com/govern-agents/governed-agent-stack/discussions) -- questions and ideas
+- [GitHub Issues](https://github.com/govern-agents/governed-agent-stack/issues): bug reports and feature requests
+- [GitHub Discussions](https://github.com/govern-agents/governed-agent-stack/discussions): questions and ideas
 
 ## License
 
-[MIT](LICENSE) -- each component carries the same MIT licence individually.
+[MIT](LICENSE): each component carries the same MIT licence individually.
