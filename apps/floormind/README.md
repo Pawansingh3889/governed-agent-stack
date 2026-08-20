@@ -82,7 +82,7 @@ It works against a manufacturing schema mapped into business domains (production
 </div>
 
 ```
-$ ollama pull gemma3:12b
+$ export OPENAI_API_KEY=sk-...
 $ streamlit run app.py
 
 ┌─────────────────────────────────────────────────┐
@@ -124,7 +124,7 @@ User asks: "What was yesterday's waste?"
       │ No match
       ▼
 ┌─────────────┐     ┌──────────────────┐     ┌──────────────┐
-│ Schema       │────▶│ Pick 4 tables    │────▶│ Ollama LLM   │
+│ Schema       │────▶│ Pick 4 tables    │────▶│ OpenAI LLM   │
 │ Registry     │     │ from 19          │     │ (Gemma3 12B)  │
 │ (6 domains)  │     │ (domain match)   │     │              │
 └─────────────┘     └──────────────────┘     └──────────────┘
@@ -146,7 +146,7 @@ User asks: "What was yesterday's waste?"
 
 **Step 1: Domain detection.** User asks about "orders" → schema registry maps it to 2 tables out of 19. Only those go to the LLM.
 
-**Step 2: SQL generation.** Ollama converts the question to SQL. Pre-built library short-circuits the 10 most common questions.
+**Step 2: SQL generation.** OpenAI converts the question to SQL. Pre-built library short-circuits the 10 most common questions.
 
 **Step 3: Execution.** SQLAlchemy runs the query (read-only: INSERT/UPDATE/DELETE blocked). Result rendered as table + Plotly chart.
 
@@ -198,9 +198,8 @@ User asks: "What was yesterday's waste?"
 ## Build it
 
 ```bash
-# Step 1: Get Ollama running
-curl -fsSL https://ollama.com/install.sh | sh
-ollama pull gemma3:12b      # default model, better SQL accuracy
+# Step 1: Set your OpenAI API key
+export OPENAI_API_KEY=sk-...
 
 # Step 2: Clone and install
 git clone https://github.com/Pawansingh3889/FloorMind.git
@@ -227,16 +226,16 @@ Or one-liner: `make setup && make run`
 Isolated deployment pattern inspired by PyCon DE 2026: "Building Secure Environments for CLI Code Agents" (Nezbeda).
 
 ```bash
-# One-command deployment: app + Ollama in isolated containers
+# One-command deployment: app + API + frontend in isolated containers
 docker compose up -d
 
 # FloorMind: http://localhost:8501
-# Ollama:  http://localhost:11434
+# OpenAI:    https://api.openai.com
 ```
 
 What this gives you:
 - FloorMind runs as non-root user in a minimal Python 3.11 container
-- Ollama runs in a separate container (isolated bridge network)
+- OpenAI API runs externally (or via local proxy like LiteLLM)
 - Model weights persist in a named volume
 - Logs persist outside containers at `./logs/`
 - Health checks on both services with auto-restart
@@ -271,8 +270,8 @@ Three suites, three commands:
 
 ```bash
 make test           # cross-module smoke (tests/test_core.py) + per-module (tests/unit/)
-make eval-library   # library fast-path eval, no Ollama needed
-make eval           # full eval (library + LLM paths), needs Ollama + gemma3:12b
+make eval-library   # library fast-path eval, no LLM needed
+make eval           # full eval (library + LLM paths), needs OPENAI_API_KEY
 ```
 
 Coverage at a glance:
@@ -379,7 +378,7 @@ FloorMind will automatically create the `documents` table and the pgvector exten
 
 | Layer | Tool | What it does |
 |---|---|---|
-| LLM | Ollama (Gemma 3 12B) | English to SQL, result explanation |
+| LLM | OpenAI GPT-4o | English to SQL, result explanation |
 | Agent | LangGraph (6-node state graph) | Structured NL-to-SQL pipeline with conditional routing |
 | MCP Servers | FastMCP (database + doc search) | Decoupled tool servers via Model Context Protocol |
 | SQL Validation | sqlparse + custom validator + sql-sop | Injection detection, schema checks, row limits, static lint |
@@ -406,7 +405,7 @@ User Question (plain English)
     |
     +---> [Schema Registry] --- 6 domains, 19 tables
     |
-    +---> [Ollama / Gemma 3 12B] --- NL-to-SQL generation
+    +---> [OpenAI GPT-4o] --- NL-to-SQL generation
     |
     v
 [SQL Validation] --- read-only enforcement
@@ -513,8 +512,8 @@ two paths:
   to a reference SQL's result set.
 
 ```bash
-make eval-library   # fast, CI-safe, no Ollama needed
-make eval-llm       # requires Ollama + gemma3:12b
+make eval-library   # fast, CI-safe, no LLM needed
+make eval-llm       # requires OPENAI_API_KEY
 make eval           # both
 ```
 

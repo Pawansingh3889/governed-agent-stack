@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""A governance gateway in front of a local Ollama model.
+"""A governance gateway in front of an OpenAI-compatible LLM.
 
 The model can *say* anything. This gateway sits between the model and the
 database and decides what is allowed to run:
 
-    you --(natural language)--> gateway --> Ollama (local model)
+    you --(natural language)--> gateway --> LLM (OpenAI API)
                                    |                |
                                    |          (model writes SQL)
                                    v                |
@@ -15,21 +15,19 @@ database and decides what is allowed to run:
                                    v
                         append-only, hash-chained ledger
 
-No cloud. No API keys. The model runs on your machine, the policy runs on
-your machine, and every decision leaves a receipt you can verify.
+Every decision leaves a receipt you can verify.
 """
 from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import sys
-import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-DEFAULT_MODEL = "phi3:mini"  # fastest local model on a CPU box
+DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 LEDGER = Path(__file__).with_name("ledger.jsonl")
 
 # The same policy shape as the sql_guard demo: reads pass, writes and DDL die.
@@ -52,17 +50,23 @@ def judge(statement: str) -> tuple[bool, str]:
 
 
 def ask_model(request: str, model: str) -> str:
-    """Ask the local model to turn a request into a single SQL statement."""
+    """Ask the model to turn a request into a single SQL statement."""
+    from openai import OpenAI
+
+    client = OpenAI(
+        api_key=os.getenv("OPENAI_API_KEY"),
+        base_url=os.getenv("OPENAI_BASE_URL"),
+    )
     prompt = (
         "You are a SQL generator. Reply with ONE SQL statement only, no prose, "
         "no explanation, no markdown fences. Request: " + request
     )
-    body = json.dumps(
-        {"model": model, "prompt": prompt, "stream": False, "options": {"num_predict": 60}}
-    ).encode()
-    req = urllib.request.Request(OLLAMA_URL, data=body, headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=300) as resp:
-        text = json.loads(resp.read())["response"]
+    response = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=60,
+    )
+    text = response.choices[0].message.content or ""
     return _extract_sql(text)
 
 

@@ -4,10 +4,10 @@ Part of the Governed Agent Stack: generated SQL is linted by sql-sop before it
 runs, and every step is written to the audit log (and, when agent-blackbox is
 installed, to a tamper-evident hash-chained ledger).
 """
+import functools
 import time
 
 import pandas as pd
-import streamlit as st
 
 from modules import audit_log
 from modules.database import get_engine
@@ -18,9 +18,9 @@ from modules.schema_registry import get_prompt_for_question
 from modules.sop_lint import lint as sop_lint
 
 
-@st.cache_data(ttl=300, show_spinner=False)
+@functools.lru_cache(maxsize=128)
 def _cached_sql_query(sql):
-    """Cache SQL query results for 5 minutes to avoid re-running identical queries."""
+    """Cache SQL query results to avoid re-running identical queries."""
     engine = get_engine()
     return pd.read_sql(sql, engine)
 

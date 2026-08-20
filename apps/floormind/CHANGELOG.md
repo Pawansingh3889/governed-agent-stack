@@ -85,7 +85,7 @@ cut (see `GOVERNANCE.md` § Release cadence for the rule).
 - **Eval harness** (`tests/eval/`) — golden set of 20 factory questions
   across library and LLM paths, judge with result-set equivalence,
   failure-mode taxonomy in `tests/eval/failure_modes.md`. Runs via
-  `make eval-library` (no Ollama) or `make eval` (full).
+  `make eval-library` (no LLM) or `make eval` (full).
 - **Four golden-set make targets** — `make eval`, `make eval-library`,
   `make eval-llm`, `make typecheck-ty` for CI-parity type checking.
 - **Per-module unit tests** under `tests/unit/` — `test_sql_validator.py`

@@ -1,26 +1,55 @@
-FROM python:3.11-slim
+# FloorMind — Multi-stage Docker build.
+# Inspired by PyCon DE 2026: "Building Secure Environments for CLI Code Agents" (Nezbeda).
+#
+# Stage 1: builder  — install deps (including build tools)
+# Stage 2: runtime  — copy only wheels + app (smaller image, no compiler)
 
-WORKDIR /app
+# ---------------------------------------------------------------------------
+# Stage 1: builder
+# ---------------------------------------------------------------------------
+FROM python:3.11-slim AS builder
 
-# System deps for psycopg2, pyodbc, and ODBC drivers
+WORKDIR /build
+
+# System deps required to compile C extensions (psycopg2, pyodbc, etc.)
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
     gcc \
     git \
     libpq-dev \
     unixodbc-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+# ---------------------------------------------------------------------------
+# Stage 2: runtime
+# ---------------------------------------------------------------------------
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Runtime-only system deps (no compiler, no -dev packages)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    unixodbc \
     curl \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Copy installed Python packages from builder
+COPY --from=builder /root/.local /root/.local
+ENV PATH=/root/.local/bin:$PATH
 
+# Copy application code
 COPY . .
 
-# Non-root user for security (Nezbeda pattern)
+# Data + log directories
+RUN mkdir -p /app/data /app/logs
+
+# Non-root user for security
 RUN useradd -m -u 1000 floormind && \
-    mkdir -p /app/data /app/logs && \
     chown -R floormind:floormind /app
 
 USER floormind

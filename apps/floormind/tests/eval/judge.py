@@ -195,11 +195,11 @@ def judge_library(sample: dict[str, Any]) -> Verdict:
 
 
 def judge_llm(sample: dict[str, Any]) -> Verdict:
-    """LLM-path check — runs the real agent against Ollama.
+    """LLM-path check -- runs the real agent against the configured LLM.
 
-    Skipped at pytest layer when ``FLOORMIND_EVAL_SKIP_LLM=1`` or when Ollama
-    isn't reachable; this function assumes the caller already verified the
-    agent stack is up.
+    Skipped at pytest layer when ``FLOORMIND_EVAL_SKIP_LLM=1`` or when
+    OPENAI_API_KEY isn't set; this function assumes the caller already verified
+    the agent stack is up.
     """
     from modules.query_library import find_matching_query
     from modules.sql_agent import run_query

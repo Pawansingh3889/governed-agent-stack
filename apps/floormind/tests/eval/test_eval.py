@@ -3,21 +3,21 @@
 Usage
 -----
 
-Fast path only (no Ollama needed, runs in <5 s):
+Fast path only (no LLM needed, runs in <5 s):
 
     pytest tests/eval/ -v -m eval_library
 
-Full run (requires Ollama + gemma3:12b on localhost:11434):
+Full run (requires OPENAI_API_KEY set):
 
     pytest tests/eval/ -v
 
-Library-only is the target you want in CI. LLM-path is opt-in and noisy —
+Library-only is the target you want in CI. LLM-path is opt-in and noisy --
 tail it locally, collect failure modes into ``failure_modes.md``, then tune.
 
 Pattern reference
 -----------------
-- Cheuk Ting Ho, PyCon DE 2026 — task + metric + custom metric structure.
-- Martin Seeler, PyCon DE 2026 — cluster failures before tuning prompts.
+- Cheuk Ting Ho, PyCon DE 2026 -- task + metric + custom metric structure.
+- Martin Seeler, PyCon DE 2026 -- cluster failures before tuning prompts.
 """
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ from tests.eval.judge import (
 )
 
 # When ``FLOORMIND_EVAL_SKIP_LLM=1`` is set, the LLM path is skipped entirely —
-# useful for CI where Ollama isn't available.
+# useful for CI where OPENAI_API_KEY isn't set.
 SKIP_LLM = os.environ.get("FLOORMIND_EVAL_SKIP_LLM") == "1"
 
 
@@ -80,7 +80,7 @@ def test_library_path(sample: dict) -> None:
 # --- LLM path --------------------------------------------------------------
 
 @pytest.mark.eval_llm
-@pytest.mark.skipif(SKIP_LLM, reason="FLOORMIND_EVAL_SKIP_LLM=1 (CI / no Ollama)")
+@pytest.mark.skipif(SKIP_LLM, reason="FLOORMIND_EVAL_SKIP_LLM=1 (CI / no OPENAI_API_KEY)")
 @pytest.mark.parametrize("sample", _LLM_SAMPLES, ids=[s["id"] for s in _LLM_SAMPLES])
 def test_llm_path(sample: dict) -> None:
     """LLM questions: generated SQL must return a result set equivalent to expected_sql."""

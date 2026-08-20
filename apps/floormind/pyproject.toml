@@ -19,6 +19,6 @@ ignore_missing_imports = true
 # Custom markers for the eval harness (tests/eval/).
 # Library path runs in CI; LLM path is opt-in locally.
 markers = [
-    "eval_library: library fast-path eval — no Ollama required",
-    "eval_llm: LLM-path eval — requires Ollama with gemma3:12b on localhost",
+    "eval_library: library fast-path eval -- no LLM required",
+    "eval_llm: LLM-path eval -- requires OPENAI_API_KEY",
 ]

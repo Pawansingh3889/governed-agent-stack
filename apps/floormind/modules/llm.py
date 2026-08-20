@@ -1,19 +1,21 @@
-"""Ollama LLM connection for FloorMind."""
+"""OpenAI LLM connection for FloorMind."""
 import json
 
-import ollama
+from openai import OpenAI
 
-from config import OLLAMA_MODEL
+from config import OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_EMBED_MODEL, OPENAI_MODEL
+
+client = OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_BASE_URL) if OPENAI_API_KEY else None
 
 
 def get_response(prompt, system_prompt=None, context=None, format=None):
-    """Get a response from the local Ollama LLM.
+    """Get a response from the OpenAI LLM.
 
     Args:
         prompt: The user's question or instruction.
         system_prompt: Optional system prompt to set context.
         context: Optional list of previous messages for conversation history.
-        format: Optional output format. Use "json" for structured JSON responses.
+        format: Optional output format. Use {"type": "json_object"} for structured JSON responses.
     """
     messages = []
     if system_prompt:
@@ -23,19 +25,23 @@ def get_response(prompt, system_prompt=None, context=None, format=None):
             messages.append(msg)
     messages.append({'role': 'user', 'content': prompt})
 
+    if not client:
+        return "LLM Error: OPENAI_API_KEY is not set. Set the OPENAI_API_KEY environment variable."
+
     try:
-        kwargs = {'model': OLLAMA_MODEL, 'messages': messages}
+        kwargs = {'model': OPENAI_MODEL, 'messages': messages}
         if format:
-            kwargs['format'] = format
-        response = ollama.chat(**kwargs)
-        return response['message']['content']
+            kwargs['response_format'] = format
+        response = client.chat.completions.create(**kwargs)
+        return response.choices[0].message.content
     except Exception as e:
-        return f"LLM Error: {e}. Make sure Ollama is running (`ollama serve`) and model '{OLLAMA_MODEL}' is pulled (`ollama pull {OLLAMA_MODEL}`)."
+        return f"LLM Error: {e}. Check your OPENAI_API_KEY and model '{OPENAI_MODEL}'."
 
 
 def get_json_response(prompt, system_prompt=None, context=None):
     """Get a structured JSON response from the LLM. Always returns valid JSON."""
-    raw = get_response(prompt, system_prompt=system_prompt, context=context, format="json")
+    raw = get_response(prompt, system_prompt=system_prompt, context=context,
+                       format={"type": "json_object"})
     try:
         return json.loads(raw)
     except (json.JSONDecodeError, TypeError):
@@ -43,7 +49,7 @@ def get_json_response(prompt, system_prompt=None, context=None):
 
 
 def get_streaming_response(prompt, system_prompt=None, context=None):
-    """Get a streaming response from the local Ollama LLM."""
+    """Get a streaming response from the OpenAI LLM."""
     messages = []
     if system_prompt:
         messages.append({'role': 'system', 'content': system_prompt})
@@ -52,10 +58,15 @@ def get_streaming_response(prompt, system_prompt=None, context=None):
             messages.append(msg)
     messages.append({'role': 'user', 'content': prompt})
 
+    if not client:
+        yield "LLM Error: OPENAI_API_KEY is not set."
+        return
+
     try:
-        stream = ollama.chat(model=OLLAMA_MODEL, messages=messages, stream=True)
+        stream = client.chat.completions.create(model=OPENAI_MODEL, messages=messages, stream=True)
         for chunk in stream:
-            yield chunk['message']['content']
+            if chunk.choices[0].delta.content:
+                yield chunk.choices[0].delta.content
     except Exception as e:
         yield f"LLM Error: {e}"
 
@@ -76,43 +87,50 @@ def call_with_tools(prompt, tools, system_prompt=None):
         messages.append({'role': 'system', 'content': system_prompt})
     messages.append({'role': 'user', 'content': prompt})
 
+    if not client:
+        return {'error': 'OPENAI_API_KEY is not set.'}
+
     try:
-        response = ollama.chat(
-            model=OLLAMA_MODEL,
+        response = client.chat.completions.create(
+            model=OPENAI_MODEL,
             messages=messages,
             tools=tools,
         )
-        msg = response['message']
-        if msg.get('tool_calls'):
+        msg = response.choices[0].message
+        if msg.tool_calls:
             return {
                 'tool_calls': [
                     {
-                        'function': tc['function']['name'],
-                        'arguments': tc['function']['arguments'],
+                        'function': tc.function.name,
+                        'arguments': json.loads(tc.function.arguments),
                     }
-                    for tc in msg['tool_calls']
+                    for tc in msg.tool_calls
                 ]
             }
-        return {'content': msg.get('content', '')}
+        return {'content': msg.content or ''}
     except Exception as e:
         return {'error': str(e)}
 
 
-def get_embeddings(text, model="nomic-embed-text"):
-    """Get vector embeddings for text using Ollama's embedding models.
+def get_embeddings(text, model=None):
+    """Get vector embeddings for text using OpenAI embedding models.
 
     Args:
         text: String or list of strings to embed.
-        model: Embedding model name (default: nomic-embed-text).
+        model: Embedding model name (default: text-embedding-3-small).
 
     Returns:
         List of embedding vectors.
     """
+    if not client:
+        return {'error': 'OPENAI_API_KEY is not set.'}
+
+    model = model or OPENAI_EMBED_MODEL
     try:
         if isinstance(text, str):
             text = [text]
-        response = ollama.embed(model=model, input=text)
-        return response['embeddings']
+        response = client.embeddings.create(model=model, input=text)
+        return [item.embedding for item in response.data]
     except Exception as e:
         return {'error': str(e)}
 

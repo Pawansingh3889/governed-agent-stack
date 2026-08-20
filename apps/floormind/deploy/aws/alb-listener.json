@@ -1,0 +1,37 @@
+{
+  "ListenerArn": "arn:aws:elasticloadbalancing:REGION:ACCOUNT_ID:loadbalancer/app/floormind-alb/LB_ID/listener/LISTENER_ID",
+  "Rules": [
+    {
+      "Priority": 1,
+      "Conditions": [
+        {
+          "Field": "host-header",
+          "Values": ["floormind.yourdomain.com"]
+        }
+      ],
+      "Actions": [
+        {
+          "Type": "forward",
+          "TargetGroupArn": "arn:aws:elasticloadbalancing:REGION:ACCOUNT_ID:targetgroup/floormind-tg/TG_ID"
+        }
+      ],
+      "IsDefault": false
+    },
+    {
+      "Priority": 2,
+      "Conditions": [
+        {
+          "Field": "path-pattern",
+          "Values": ["/_stcore/health"]
+        }
+      ],
+      "Actions": [
+        {
+          "Type": "forward",
+          "TargetGroupArn": "arn:aws:elasticloadbalancing:REGION:ACCOUNT_ID:targetgroup/floormind-tg/TG_ID"
+        }
+      ],
+      "IsDefault": false
+    }
+  ]
+}

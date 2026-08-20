@@ -1,146 +1,191 @@
+<div align="center">
+
 # Governed Agent Stack
 
 **Free, on-prem building blocks for an AI agent you can point at a real database and actually audit.**
 
-Every 2026 agentic-AI report lands on the same two blockers, and neither of them is the model. The first is the data underneath it: nobody mapped the database, so the agent is working blind. The second is governance around it: nothing constrains what the agent can touch, and there is no trustworthy record of what it did. Pilots stall there, not on model quality.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![GitHub Actions](https://github.com/govern-agents/governed-agent-stack/actions/workflows/ci.yml/badge.svg)](https://github.com/govern-agents/governed-agent-stack/actions)
+[![GitHub Stars](https://img.shields.io/github/stars/govern-agents/governed-agent-stack?style=social)](https://github.com/govern-agents/governed-agent-stack)
 
-This is a reference stack of small tools that each solve one of those problems, run entirely on your own hardware, and cost nothing. Each one stands on its own. Put together, they make up an agent you can place in front of a regulated database without losing sleep.
+</div>
 
-Nobody packages this free and on-prem. That is the whole point.
+---
+
+Every agentic-AI pilot stalls on the same two blockers, and neither is the model: the data underneath is unmapped, so the agent works blind, and the governance around it is missing, so nothing constrains what it touches and nothing records what it did.
+
+This stack fixes both with small, on-prem tools that each solve one problem and cost nothing. Standalone or composed, they make an agent you can point at a regulated database without losing sleep.
+
+**Nobody packages this free and on-prem. That is the whole point.**
+
+## Quick start
+
+```bash
+git clone https://github.com/govern-agents/governed-agent-stack
+cd governed-agent-stack
+
+# 1. Install workspace dependencies
+uv sync --all-packages --all-extras
+
+# 2. Seed the demo database
+cd apps/floormind
+uv run python scripts/seed_demo_db.py
+
+# 3. Start the FloorMind API (needs OPENAI_API_KEY)
+export OPENAI_API_KEY=sk-...
+uv run uvicorn api.main:app --port 8001
+
+# 4. Start the merged console (FloorMind + surveys + audit, one UI)
+cd ../dashboard
+pnpm install
+pnpm dev --port 3002
+```
+
+Open http://localhost:3002. The console proxies every backend server-side, so no CORS setup and no API keys in the browser. Login auto-skips in dev mode.
+
+Prefer a single command? The legacy Streamlit UI still works:
+
+```bash
+uv run --directory apps/floormind streamlit run app.py   # http://localhost:8501
+```
 
 ## The layers
 
-| Layer | Tool | Job |
-|---|---|---|
-| **Foundations** | [schema-scout](https://github.com/Pawansingh3889/schema-scout) + [drift-gate](https://github.com/Pawansingh3889/drift-gate) | Map the database, recover undeclared relationships, flag PII, and score how ready the schema actually is for an agent — then refuse to run once that schema moves without review. |
-| **Scoped access** | [sql-explorer-mcp](https://github.com/Pawansingh3889/sql-explorer-mcp) + [sql-sop](https://github.com/Pawansingh3889/sql-guard) + [query-warden](https://github.com/Pawansingh3889/query-warden) | Give the agent read-only SQL access: every query is parsed, linted, and checked against role-based access rules before it runs. |
-| **Reasoning** | [FloorMind](https://github.com/Pawansingh3889/FloorMind) | Turn a plain-English question into a checked query and a plain-English answer. |
-| **Result masking** | [pii-veil](https://github.com/Pawansingh3889/pii-veil) | Mask any PII that survives into result rows before they reach the model. |
-| **Accountability** | [agent-blackbox](https://github.com/Pawansingh3889/agent-blackbox) | Record every step in a tamper-evident, hash-chained log you can verify later. |
-| **Memory** | [thread-recall](https://github.com/Pawansingh3889/thread-recall) | Carry context between turns without carrying PII with it — masked on write, so the long-term store never retains what the policy refuses. |
+<table>
+<tr>
+<td width="120" align="center"><b>Layer</b></td>
+<td width="180" align="center"><b>Tool</b></td>
+<td><b>What it does</b></td>
+</tr>
+<tr>
+<td align="center">Foundations</td>
+<td><a href="https://github.com/govern-agents/schema-scout">schema-scout</a> + <a href="https://github.com/govern-agents/drift-gate">drift-gate</a></td>
+<td>Map the database, recover undeclared relationships, flag PII, score agent-readiness, then refuse to run once the schema moves without review.</td>
+</tr>
+<tr>
+<td align="center">Scoped access</td>
+<td><a href="https://github.com/govern-agents/sql-explorer-mcp">sql-explorer-mcp</a> + <a href="https://github.com/govern-agents/sql-sop">sql-sop</a> + <a href="https://github.com/govern-agents/query-warden">query-warden</a></td>
+<td>Give the agent read-only SQL access: every query is parsed, linted, and checked against role-based access rules before it runs.</td>
+</tr>
+<tr>
+<td align="center">Reasoning</td>
+<td><a href="https://github.com/govern-agents/governed-agent-stack/tree/main/apps/floormind">FloorMind</a></td>
+<td>Turn a plain-English question into a checked query and a plain-English answer.</td>
+</tr>
+<tr>
+<td align="center">Result masking</td>
+<td><a href="https://github.com/govern-agents/pii-veil">pii-veil</a></td>
+<td>Mask any PII that survives into result rows before they reach the model.</td>
+</tr>
+<tr>
+<td align="center">Accountability</td>
+<td><a href="https://github.com/govern-agents/agent-blackbox">agent-blackbox</a></td>
+<td>Record every step in a tamper-evident, hash-chained log you can verify later.</td>
+</tr>
+<tr>
+<td align="center">Memory</td>
+<td><a href="https://github.com/govern-agents/thread-recall">thread-recall</a></td>
+<td>Carry context between turns without carrying PII with it, masked on write.</td>
+</tr>
+<tr>
+<td align="center">Surveys</td>
+<td><a href="https://github.com/govern-agents/elenchus">elenchus</a> + <a href="https://github.com/govern-agents/governed-agent-stack/tree/main/packages/elenchus-mcp">elenchus-mcp</a></td>
+<td>Governed survey authoring and conducting. Create, publish, and analyse surveys with an LLM-driven conversational engine that keeps the model on rails.</td>
+</tr>
+<tr>
+<td align="center">Console</td>
+<td><a href="https://github.com/govern-agents/governed-agent-stack/tree/main/apps/dashboard">dashboard</a></td>
+<td>One Next.js app over the whole stack: chat, factory KPIs, compliance, waste, documents, surveys, audit, and configuration, with every backend proxied server-side.</td>
+</tr>
+</table>
 
 ## Flagship: sql-steward
 
-[sql-steward](https://github.com/Pawansingh3889/sql-steward) bundles the scoped-access, masking, and accountability layers into one Model Context Protocol server, behind a stronger guarantee: **the agent never writes SQL at all.** Instead of validating SQL the model wrote, sql-steward compiles every query from a semantic layer you control (entities, joins, metrics, PII tags), so there is no `run_sql` tool to misuse. Blocked PII is refused before the query runs, every call can land in the agent-blackbox ledger, and the same tools work across SQL Server, Postgres, and SQLite.
+<a href="https://github.com/govern-agents/sql-steward"><b>sql-steward</b></a> bundles scoped access, masking, and accountability into one Model Context Protocol server behind a stronger guarantee: **the agent never writes SQL at all.**
 
-Use it as the all-in-one entry point, or compose the individual pieces below yourself. They are the same building blocks either way.
+Instead of validating SQL the model wrote, sql-steward compiles every query from a semantic layer you control (entities, joins, metrics, PII tags), so there is no `run_sql` tool to misuse. Blocked PII is refused before the query runs, every call can land in the agent-blackbox ledger, and the same tools work across SQL Server, Postgres, and SQLite.
 
-## How it fits together
-
-```mermaid
-flowchart TB
-    Q["Question in plain English"] --> AG
-
-    subgraph Foundations
-        SS["schema-scout<br/>map, relationships, PII, readiness"]
-    end
-
-    subgraph Reasoning
-        AG["FloorMind<br/>question to SQL to answer"]
-    end
-
-    subgraph Scoped_access["Scoped access"]
-        SOP["sql-sop<br/>SQL safety lint"]
-        WARD["query-warden<br/>role-based access"]
-        EX["sql-explorer-mcp<br/>read-only execution"]
-    end
-
-    DB[("Your database<br/>stays on-prem")]
-    VEIL["pii-veil<br/>mask PII in results"]
-    A["Answer + chart"]
-    BB["agent-blackbox<br/>tamper-evident log"]
-    TR["thread-recall<br/>memory, PII masked on write"]
-    ST["sql-steward<br/>all-in-one gateway:<br/>agent never writes SQL"]
-
-    SS -- schema context --> AG
-    AG -- generated SQL --> SOP --> WARD --> EX --> DB
-    DB -- rows --> VEIL --> AG --> A
-
-    AG -. remembers .-> TR
-    TR -. recalls .-> AG
-
-    Q -. or, one governed gateway .-> ST
-    ST -- compiled SQL --> DB
-
-    AG -. every step .-> BB
-    SOP -. logged .-> BB
-    WARD -. logged .-> BB
-    EX -. logged .-> BB
-    ST -. logged .-> BB
-```
+Use it as the all-in-one entry point, or compose the individual pieces yourself. They are the same building blocks either way.
 
 ## How a question flows through it
 
-1. **Once, up front:** point schema-scout at the database. It produces a catalog, an agent-ready context file, and a readiness score. If the score is low, you fix the foundations before going further. Re-run it on a schedule and use `diff` to catch drift.
-2. **A user asks a question** in plain English. FloorMind uses the schema context to route the question to the right domain and tables, then drafts SQL.
-3. **Before anything touches the database,** sql-sop lints the draft, query-warden checks it against the asker's role (which tables and columns they may see), and sql-explorer-mcp enforces read-only execution. Writes never run, and out-of-role access is blocked before it reaches the database.
-4. **Results come back** and FloorMind explains them in plain English, with context.
-5. **agent-blackbox records the whole chain** (question, SQL, result, outcome) in a hash-chained ledger. Anyone can verify later that the record was not altered after the fact.
+```
+  Question in plain English
+         |
+         v
+  +-----------------+     +------------------+     +------------------+
+  | schema-scout    |---->| FloorMind        |---->| sql-sop          |
+  | (map, context)  |     | (NL -> SQL)      |     | (lint)           |
+  +-----------------+     +------------------+     +------------------+
+                                                         |
+                                                         v
+  +-----------------+     +------------------+     +------------------+
+  | agent-blackbox  |<----| pii-veil         |<----| query-warden     |
+  | (audit log)     |     | (mask PII)       |     | (role check)     |
+  +-----------------+     +------------------+     +------------------+
+         ^                                                |
+         |                                                v
+  +-----------------+                             +------------------+
+  | thread-recall   |                             | Your database    |
+  | (memory)        |                             | (stays on-prem)  |
+  +-----------------+                             +------------------+
+```
 
 ## Why on-prem, why free
 
-- **Nothing leaves the building.** The database, the local LLM (Ollama), and the logs all stay on your hardware. That is the whole reason this exists for regulated or privacy-sensitive data.
-- **Read-only by enforcement, not by trust.** Three layers have to agree before a query runs, so a misconfigured login is not your only protection.
-- **Auditable by design.** The log is tamper-evident, so "what did the agent do" has a real, checkable answer.
-- **No licence cost, no per-seat fee, no vendor lock-in.** Clone the pieces you need and run them.
-
-## The pieces
-
-Each tool is its own repo with its own docs. Start with whichever problem is most urgent. Usually that is schema-scout, because everything downstream depends on knowing the data first.
-
-- **[sql-steward](https://github.com/Pawansingh3889/sql-steward)** (flagship): one governed MCP server where the agent never writes SQL. Queries are compiled from a semantic layer you control, multi-dialect (SQL Server, Postgres, SQLite), with optional role checks, masking, and audit wired in.
-- **[schema-scout](https://github.com/Pawansingh3889/schema-scout)**: maps a SQL Server database, recovers hidden foreign keys, flags PII, scores agent-readiness, and serves the catalog to an agent over MCP.
-- **[drift-gate](https://github.com/Pawansingh3889/drift-gate)**: compares the live schema against a baseline you sealed by hand and exits non-zero when something breaking has moved. No model, no network — it answers "is it still what you checked".
-- **[sql-explorer-mcp](https://github.com/Pawansingh3889/sql-explorer-mcp)**: read-only Model Context Protocol server for SQL Server, Postgres, and SQLite, with three layers of safety.
-- **[sql-sop](https://github.com/Pawansingh3889/sql-guard)**: a fast rule-based SQL linter (available on [PyPI](https://pypi.org/project/sql-sop/)) that catches dangerous and slow patterns before a query runs.
-- **[query-warden](https://github.com/Pawansingh3889/query-warden)**: role-based access control for SQL. Decides whether the asker's role may touch the tables and columns a query references, before it runs.
-- **[pii-veil](https://github.com/Pawansingh3889/pii-veil)**: masks PII in query results (Microsoft Presidio when installed, regex fallback otherwise) before they reach the model.
-- **[FloorMind](https://github.com/Pawansingh3889/FloorMind)**: an on-prem natural-language query tool for manufacturing data, eval-measured rather than vibes-based.
-- **[agent-blackbox](https://github.com/Pawansingh3889/agent-blackbox)**: an append-only, hash-chained ledger that gives agent actions a tamper-evident audit trail.
-- **[sql-sop-mcp](https://github.com/Pawansingh3889/sql-sop-mcp)**: the sql-sop linter as MCP tools, so a model checks its own SQL before proposing it rather than after someone runs it.
-- **[thread-recall](https://github.com/Pawansingh3889/thread-recall)**: governed agent memory — per-thread history and semantic recall, masked on write and namespaced per actor so one agent cannot read another's threads.
-
-## Status
-
-All eleven components are public and usable today, including the [sql-steward](https://github.com/Pawansingh3889/sql-steward) flagship that bundles them. This repo is the map that ties them together, not a separate install. Pick the layers you need, or start with sql-steward.
+<table>
+<tr>
+<td width="32" align="center">🔒</td>
+<td><b>Nothing leaves the building.</b> The database, the LLM, and the logs all stay on your hardware. That is the whole reason this exists for regulated or privacy-sensitive data.</td>
+</tr>
+<tr>
+<td align="center">🛡️</td>
+<td><b>Read-only by enforcement, not by trust.</b> Three layers have to agree before a query runs, so a misconfigured login is not your only protection.</td>
+</tr>
+<tr>
+<td align="center">📋</td>
+<td><b>Auditable by design.</b> The log is tamper-evident, so "what did the agent do" has a real, checkable answer.</td>
+</tr>
+<tr>
+<td align="center">💰</td>
+<td><b>No licence cost, no per-seat fee, no vendor lock-in.</b> Clone the pieces you need and run them.</td>
+</tr>
+</table>
 
 ## Repository layout
 
-The components live here, as a [uv workspace](https://docs.astral.sh/uv/concepts/projects/workspaces/). Each keeps its own `pyproject.toml`, its own version, and its own PyPI identity — the monorepo is a convenience for maintaining nine things, not a bundling of them into one. Nothing about installing a single component changed.
-
 ```
-packages/           ten publishable libraries
-  agent-blackbox/   drift-gate/        pii-veil/     query-warden/
-  schema-scout/     sql-explorer-mcp/  sql-sop/      sql-sop-mcp/
-  sql-steward/      thread-recall/
-apps/               not packages, and outside the workspace
-  floormind/        the Streamlit application
-  ollama-gatekeeper/ a governance gateway in front of a local model
-  control-tower/    the registry that runs the stack — see its REGISTRY.md
-policies/           the governance rules, checked against stack.yaml
-stack.yaml          the components, as machine-readable data
-```
-
-`make check` runs both self-checks: the governance policies against `stack.yaml`, and
-control-tower's registry against this tree. `make help` lists the rest.
-
-```bash
-git clone https://github.com/Pawansingh3889/governed-agent-stack
-cd governed-agent-stack
-uv sync --all-packages --all-extras     # every component, wired to its siblings
-uv run --directory packages/sql-steward pytest
+governed-agent-stack/
+  packages/              eleven publishable libraries
+    agent-blackbox/      drift-gate/         elenchus-mcp/
+    pii-veil/            query-warden/       schema-scout/
+    sql-explorer-mcp/    sql-sop/            sql-sop-mcp/
+    sql-steward/         thread-recall/
+  apps/                  not packages, outside the workspace
+    floormind/           the FastAPI backend + legacy Streamlit UI
+    dashboard/           the merged Next.js console (FloorMind + elenchus + audit)
+    ollama-gatekeeper/   a governance gateway in front of a local model
+    control-tower/       the registry that runs the stack
+  policies/              governance rules, checked against stack.yaml
+  stack.yaml             the components, as machine-readable data
 ```
 
-Cross-component dependencies resolve to the sibling in `packages/` rather than to PyPI, so a change in `pii-veil` is picked up by `sql-steward` without a release. Published wheels are unaffected — those are workspace-local sources, not rewritten requirements.
+## Contributing
 
-## Governance
+We welcome contributions of all levels. See the [Contributing Guide](CONTRIBUTING.md) to get started.
 
-The stack holds itself to the same bar it helps you apply to an agent: on-prem, open,
-single-purpose, auditable. Those rules aren't just prose — the components are declared in
-[stack.yaml](stack.yaml) and enforced as policy-as-code in [policies/](policies/), so a
-new component has to pass the same check. See [GOVERNANCE.md](GOVERNANCE.md) for the
-principles and [ROADMAP.md](ROADMAP.md) for where it's heading.
+1. Find an issue tagged `good first issue` or `help wanted`
+2. Fork, branch, code, test (`make test`, `make lint`)
+3. Open a PR with a conventional commit prefix (`feat:`, `fix:`, `docs:`, `chore:`)
+
+Security issues do **not** go in a public GitHub issue. See [SECURITY.md](SECURITY.md).
+
+## Community
+
+- [GitHub Issues](https://github.com/govern-agents/governed-agent-stack/issues): bug reports and feature requests
+- [GitHub Discussions](https://github.com/govern-agents/governed-agent-stack/discussions): questions and ideas
 
 ## License
 
-[MIT](LICENSE).
+[MIT](LICENSE): each component carries the same MIT licence individually.

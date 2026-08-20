@@ -19,8 +19,8 @@ Configuration (environment):
   THREAD_RECALL_MASK      mask PII on write (default on; set 0 to disable)
   THREAD_RECALL_AUDIT     mirror writes to agent-blackbox (default off; set 1 on)
   THREAD_RECALL_ACTOR     default principal when no actor is passed (default: shared)
-  THREAD_RECALL_EMBED     hashing (default) | ollama
-  THREAD_RECALL_OLLAMA_*  HOST / MODEL overrides for the Ollama embedder
+  THREAD_RECALL_EMBED     hashing (default) | openai
+  THREAD_RECALL_OPENAI_*  API_KEY / MODEL / BASE_URL overrides for the OpenAI embedder
 """
 
 from __future__ import annotations
@@ -70,19 +70,24 @@ def _hash_embed(text: str, dim: int = 256) -> list[float]:
 
 
 def _embed(text: str) -> list[float]:
-    if os.environ.get("THREAD_RECALL_EMBED", "hashing").strip().lower() == "ollama":
+    if os.environ.get("THREAD_RECALL_EMBED", "hashing").strip().lower() == "openai":
         import json
         import urllib.request
 
-        host = os.environ.get("THREAD_RECALL_OLLAMA_HOST", "http://localhost:11434").rstrip("/")
-        model = os.environ.get("THREAD_RECALL_OLLAMA_MODEL", "nomic-embed-text")
+        base_url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com").rstrip("/")
+        api_key = os.environ.get("OPENAI_API_KEY", "")
+        model = os.environ.get("OPENAI_EMBED_MODEL", "text-embedding-3-small")
         req = urllib.request.Request(
-            f"{host}/api/embeddings",
-            data=json.dumps({"model": model, "prompt": text}).encode(),
-            headers={"Content-Type": "application/json"},
+            f"{base_url}/v1/embeddings",
+            data=json.dumps({"model": model, "input": text}).encode(),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {api_key}",
+            },
         )
         with urllib.request.urlopen(req) as resp:
-            return list(json.loads(resp.read())["embedding"])
+            data = json.loads(resp.read())
+        return list(data["data"][0]["embedding"])
     return _hash_embed(text)
 
 
