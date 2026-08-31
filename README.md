@@ -132,6 +132,8 @@ Use it as the all-in-one entry point, or compose the individual pieces yourself.
   +-----------------+                             +------------------+
 ```
 
+The longer version is drawn in **[docs/architecture.html](docs/architecture.html)**: the gates a question passes through, the register with every declared role, and what sql-steward actually changes, drawn next to the composed pipeline so the difference is one box rather than a claim.
+
 ## Why on-prem, why free
 
 <table>
