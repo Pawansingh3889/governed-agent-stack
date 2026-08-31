@@ -168,7 +168,7 @@ classification, it's a heuristic starting point. Rename or merge as needed.
 - `--min-confidence X`: drop inferred FKs below this confidence
 - `--usage`: rank tables/domains by query activity (needs Query Store enabled or `VIEW SERVER STATE`)
 - `--path FROM,TO`: print the join path between two tables, e.g. `--path dbo.orders,dbo.customers`
-- `--describe` / `--model` / `--ollama-host`: local-LLM descriptions via Ollama
+- `--describe` / `--model`: AI descriptions via OpenAI-compatible API
 - `--erd-tables N`: how many tables to draw in the diagram
 - `--domains auto|prefix|components`: how to group tables into subject areas
 
@@ -191,7 +191,7 @@ time.
 ## Read-only, on purpose
 
 Every query is a SELECT, the connection is opened read-only, and the AI step
-runs against a **local** Ollama, so neither your data nor your schema is sent
+runs against an OpenAI-compatible API (can be a local proxy), so neither your data nor your schema is sent
 anywhere. That's the whole point for a regulated or privacy-sensitive
 database.
 

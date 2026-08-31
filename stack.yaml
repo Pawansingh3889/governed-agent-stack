@@ -5,67 +5,79 @@
 
 components:
   - name: schema-scout
-    repo: https://github.com/Pawansingh3889/schema-scout
+    repo: https://github.com/govern-agents/schema-scout
     license: MIT
     on_prem: true
     role: schema-discovery
 
   - name: drift-gate
-    repo: https://github.com/Pawansingh3889/drift-gate
+    repo: https://github.com/govern-agents/drift-gate
     license: MIT
     on_prem: true
     role: schema-drift-detection
 
   - name: sql-explorer-mcp
-    repo: https://github.com/Pawansingh3889/sql-explorer-mcp
+    repo: https://github.com/govern-agents/sql-explorer-mcp
     license: MIT
     on_prem: true
     role: read-only-access
 
   - name: sql-sop
-    repo: https://github.com/Pawansingh3889/sql-guard
+    repo: https://github.com/govern-agents/sql-sop
     license: MIT
     on_prem: true
     role: sql-linting
 
   - name: query-warden
-    repo: https://github.com/Pawansingh3889/query-warden
+    repo: https://github.com/govern-agents/query-warden
     license: MIT
     on_prem: true
     role: access-control
 
   - name: pii-veil
-    repo: https://github.com/Pawansingh3889/pii-veil
+    repo: https://github.com/govern-agents/pii-veil
     license: MIT
     on_prem: true
     role: pii-masking
 
   - name: agent-blackbox
-    repo: https://github.com/Pawansingh3889/agent-blackbox
+    repo: https://github.com/govern-agents/agent-blackbox
     license: MIT
     on_prem: true
     role: audit
 
   - name: sql-steward
-    repo: https://github.com/Pawansingh3889/sql-steward
+    repo: https://github.com/govern-agents/sql-steward
     license: MIT
     on_prem: true
     role: governed-query-gateway
 
   - name: FloorMind
-    repo: https://github.com/Pawansingh3889/FloorMind
+    repo: https://github.com/govern-agents/governed-agent-stack/tree/main/apps/floormind
     license: Apache-2.0
     on_prem: true
     role: reasoning-application
 
   - name: sql-sop-mcp
-    repo: https://github.com/Pawansingh3889/sql-sop-mcp
+    repo: https://github.com/govern-agents/sql-sop-mcp
     license: MIT
     on_prem: true
     role: sql-linting
 
   - name: thread-recall
-    repo: https://github.com/Pawansingh3889/thread-recall
+    repo: https://github.com/govern-agents/thread-recall
     license: MIT
     on_prem: true
     role: agent-memory
+
+  - name: elenchus
+    repo: https://github.com/govern-agents/elenchus
+    license: Apache-2.0
+    on_prem: true
+    role: survey-service
+
+  - name: elenchus-mcp
+    repo: https://github.com/govern-agents/governed-agent-stack/tree/main/packages/elenchus-mcp
+    license: MIT
+    on_prem: true
+    role: survey-mcp-bridge

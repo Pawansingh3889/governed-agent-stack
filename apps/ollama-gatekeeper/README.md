@@ -1,21 +1,12 @@
-# ollama-gatekeeper
+# llm-gatekeeper
 
-A governance gateway in front of a local LLM. The model runs on your
-machine, generates SQL from a natural-language request, and the gateway
-decides what is allowed to reach the database. Reads pass, writes and DDL
-die at the door, and every decision is written to a tamper-evident ledger.
+A governance gateway in front of an OpenAI-compatible LLM.
 
-No cloud, no API keys, no data leaving the machine.
-
-## The idea
-
-An "agentic harness" is everything wrapped around an LLM to turn it into
-an agent: the tools, the loop, and the logic that evaluates its output.
-Most of that infrastructure is built to make the agent *more capable*.
-This is the part that makes it *safe to run*.
+The model can *say* anything. This gateway sits between the model and the
+database and decides what is allowed to run:
 
 ```
-you --(natural language)--> gateway --> Ollama (local model)
+you --(natural language)--> gateway --> LLM (OpenAI API)
                                |                |
                                |          (model writes SQL)
                                v                |
@@ -27,43 +18,36 @@ you --(natural language)--> gateway --> Ollama (local model)
                     append-only, hash-chained ledger
 ```
 
-The model can *say* anything. It can write `DROP TABLE customers` all day.
-The gateway is the one identity between the model and the data, and it
-refuses the statement before it ever runs. The append-only ledger means
-"what did the agent try to do?" always has a provable answer.
+No data leaves your machine when used with a local proxy. Every decision
+leaves a receipt you can verify.
 
-## Run it
+## Quick start
 
-Requires [Ollama](https://ollama.com) running locally with at least one
-model pulled (`ollama pull phi3:mini`). Then:
+Requires an OpenAI API key or a local proxy:
 
 ```bash
-python3 gateway.py                              # runs the built-in demo
-python3 gateway.py "delete every order from 2020"   # one request
+export OPENAI_API_KEY=sk-...
+python gateway.py show me total sales by customer
 ```
 
-The demo sends one safe request and two dangerous ones, and prints the
-model's SQL, the gateway's verdict, and the ledger hash for each.
+Or use with a local proxy (e.g. LiteLLM):
 
-## What each part is
+```bash
+export OPENAI_BASE_URL=http://localhost:4000
+export OPENAI_API_KEY=placeholder
+python gateway.py show me total sales by customer
+```
 
-- **The model** — served by Ollama on `localhost:11434`, entirely on-prem.
-- **`sql_guard`** — the same policy shape as the browser demo and the
-  Terraform OPA container: `verb(statement)` is parsed, `SELECT` passes,
-  a blocklist of write/DDL verbs is refused, unknown verbs fail closed.
-- **The ledger** — each record hashes the previous record's hash plus its
-  own contents. Editing any past entry breaks the chain from that point,
-  which `verify_ledger()` detects.
+## How it works
 
-## Limits (read before trusting)
+1. **You ask a question** in natural language.
+2. **The model generates SQL** (single statement).
+3. **The gate checks the SQL** against a simple policy: only SELECT is allowed.
+4. **The decision is logged** in a hash-chained, tamper-evident ledger.
 
-- This governs the model's SQL *output*. It is not a substitute for a
-  read-only database connection, which makes writes physically impossible
-  at the driver level. Run both: the connection is the hard floor, the
-  gateway adds policy nuance (PII scope, audit) a connection can't.
-- SQL extraction from a small model's free text is best-effort. In a real
-  deployment the model emits a structured tool call, not prose, and the
-  gateway parses that.
-- The policy here is deliberately minimal (verb allowlist). Real
-  enforcement adds schema scoping, row limits, and PII redaction — see the
-  design notes in schema-scout.
+## Features
+
+- **SQL guard** -- blocks INSERT, UPDATE, DELETE, DDL, and GRANT statements.
+- **Tamper-evident ledger** -- every entry is SHA-256 hashed with the previous entry's hash.
+- **Ledger verification** -- `verify_ledger()` recomputes the chain and detects any edits.
+- **Model-agnostic** -- works with any OpenAI-compatible API (GPT-4o, local proxies, etc.).

@@ -26,7 +26,7 @@ own metadata.
 | plotly                   | >=5.18.0      | MIT             | https://github.com/plotly/plotly.py                              |
 | pypdf                    | >=3.17.0      | BSD-3-Clause    | https://github.com/py-pdf/pypdf                                  |
 | openpyxl                 | >=3.1.0       | MIT             | https://foss.heptapod.net/openpyxl/openpyxl                      |
-| ollama                   | >=0.1.0       | MIT             | https://github.com/ollama/ollama-python                          |
+| openai                   | >=1.30.0      | Apache-2.0      | https://github.com/openai/openai-python                         |
 | pyodbc                   | >=5.0.0       | MIT-0           | https://github.com/mkleehammer/pyodbc                            |
 | pgvector                 | >=0.3         | MIT             | https://github.com/pgvector/pgvector-python                      |
 | psycopg2-binary          | >=2.9         | LGPL-3.0-or-later with exceptions | https://github.com/psycopg/psycopg2                    |
@@ -44,18 +44,15 @@ own metadata.
 | mypy       | >=1.15        | MIT         | https://github.com/python/mypy          |
 | ty         | (pinned in CI)| MIT         | https://github.com/astral-sh/ty         |
 
-## Model weights
+## Model access
 
-FloorMind does not redistribute any model weights. It expects the user to
-fetch them locally via Ollama:
+FloorMind uses the OpenAI API (or a compatible proxy). Set your API key:
 
 ```
-ollama pull gemma3:12b
+export OPENAI_API_KEY=sk-...
 ```
 
-Gemma 3 is licensed by Google under the Gemma Terms of Use
-(<https://ai.google.dev/gemma/terms>). Use of the model is governed by
-those terms; FloorMind's MIT grant does not extend to it.
+Model usage is governed by OpenAI's terms of service.
 
 ## How to report a licence issue
 

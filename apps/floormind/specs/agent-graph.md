@@ -36,7 +36,7 @@ class AgentState(TypedDict, total=False):
 - **Purpose**: Use LLM to generate SQL from natural language
 - **Input**: `question`, `domain`
 - **Output**: `sql`
-- **Logic**: Builds a domain-scoped prompt via `schema_registry.get_prompt_for_question()`, sends to Ollama, cleans markdown fences from response
+- **Logic**: Builds a domain-scoped prompt via `schema_registry.get_prompt_for_question()`, sends to OpenAI-compatible LLM, cleans markdown fences from response
 - **Only reached**: When `check_library` returns no match
 
 ### 4. validate_sql
@@ -75,3 +75,40 @@ detect_domain -> check_library
                                            (valid?) |--- no  --> END (error)
                                                     |--- yes --> execute_sql -> explain_results -> END
 ```
+
+## dbt Integration (Optional)
+
+When `FLOORMIND_DBT_ENABLED=true`, FloorMind reads schema information from dbt
+manifest files instead of the hardcoded schema registry. This enables:
+
+1. **Automatic schema discovery**: dbt models are used as table sources
+2. **Compiled SQL execution**: dbt models can be run directly
+3. **Domain mapping**: dbt tags map to FloorMind domains
+
+### Configuration
+
+```bash
+export FLOORMIND_DBT_ENABLED=true
+export FLOORMIND_DBT_PROJECT_DIR=/path/to/dbt/project
+export FLOORMIND_DBT_PROFILE_DIR=/path/to/profiles  # optional
+```
+
+### Flow with dbt
+
+```
+detect_domain -> check_library -> generate_sql -> validate_sql -> execute_sql -> explain_results
+                     |
+                     +--[dbt check: does a dbt model match the question?]
+                     |      yes -> use dbt compiled SQL instead of LLM generation
+                     |      no  -> fall through to generate_sql (LLM)
+```
+
+The `schema_registry.get_prompt_for_question()` function checks the dbt manifest
+when enabled, merging dbt model columns into the domain-scoped prompt. This means
+the LLM sees dbt model names and column descriptions alongside traditional tables.
+
+### Modules
+
+- `modules/dbt_runner.py` -- Execute dbt CLI commands (run, test) and read manifest/catalog
+- `modules/dbt_metadata.py` -- Parse manifest into FloorMind schema format
+- `modules/dbt_integration.py` -- High-level integration: schema lookup, model execution

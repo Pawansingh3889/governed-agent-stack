@@ -13,7 +13,7 @@ Format follows Michael Nygard's
 
 | ADR | Decision | Status |
 |---|---|---|
-| [0001](0001-on-premises-llm.md) | On-premises LLM (Ollama + Gemma 3) instead of a cloud API | Accepted |
+| [0001](0001-on-premises-llm.md) | LLM provider: OpenAI-compatible API (supersedes Ollama decision) | Accepted |
 | [0002](0002-four-layer-read-only.md) | Four independent layers enforce read-only access | Accepted |
 | [0003](0003-temperature-out-of-nl-surface.md) | Temperature monitoring stays out of the NL query surface | Accepted |
 | [0004](0004-rca-scaffolds-never-concludes.md) | RCA scaffolds evidence; a human concludes | Accepted |

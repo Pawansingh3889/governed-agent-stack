@@ -21,6 +21,8 @@ allowed_roles := {
 	"governed-query-gateway",
 	"reasoning-application",
 	"agent-memory",
+	"survey-service",
+	"survey-mcp-bridge",
 }
 
 # Every component must declare a license.

@@ -155,7 +155,7 @@ entities:
       returns: [id, title]
 ```
 
-The query text is embedded locally (set `SQL_STEWARD_EMBED_URL` to a local Ollama endpoint, so nothing leaves the building), and matched with pgvector's `<=>` operator. PostgreSQL only. The embedding column is never returned.
+The query text is embedded locally (set `SQL_STEWARD_EMBED_URL` to an OpenAI-compatible endpoint, so nothing leaves the building), and matched with pgvector's `<=>` operator. PostgreSQL only. The embedding column is never returned.
 
 - [query-warden](https://github.com/Pawansingh3889/query-warden) re-checks the compiled SQL against a role policy.
 - [pii-veil](https://github.com/Pawansingh3889/pii-veil) masks any PII that survives into result rows.

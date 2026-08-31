@@ -23,7 +23,7 @@ FloorMind's security story is in `specs/security.md`. In short:
 - **Read-only posture** — only `SELECT` and `WITH` statements execute.
   `INSERT`/`UPDATE`/`DELETE`/`DROP`/`ALTER`/`TRUNCATE`/`EXEC` keywords
   fail validation before reaching the database.
-- **Local models** — Ollama runs in-process or in a sibling container.
+- **Local models** -- OpenAI-compatible API runs in-process or via a local proxy (e.g. LiteLLM).
   No request leaves the factory network by default.
 - **Audit log** — every agent step emits a JSONL event to
   `logs/audit.jsonl` with a UTC timestamp. Covers the BRC 8.5.1
@@ -82,7 +82,7 @@ We follow **90-day coordinated disclosure** by default:
    you agree.
 
 Longer timelines are available on request when the fix needs upstream
-changes (e.g. in Ollama or sqlparse).
+changes (e.g. in the LLM provider or sqlparse).
 
 ## Scope
 

@@ -27,6 +27,6 @@ semantic versioning.
 - Subject-area (domain) grouping
 - Schema health checks (no PK, orphan, all-null, constant, mostly-null)
 - Join-path finder between any two tables
-- On-prem table descriptions via a local Ollama model
+- On-prem table descriptions via OpenAI-compatible API
 - Outputs: self-contained HTML dashboard, JSON, Markdown, Mermaid ER diagram,
   FK-constraint SQL script, and dbt relationship tests

@@ -10,6 +10,6 @@ listed in THIRD_PARTY_NOTICES.md. Each dependency is governed by its
 own licence; that licence prevails over anything in this NOTICE file.
 
 FloorMind does not redistribute model weights. Users pull Gemma 3 via
-Ollama at install time; Gemma 3 is governed by Google's Gemma Terms
+OpenAI-compatible API at runtime; model governed by provider terms
 of Use (https://ai.google.dev/gemma/terms), not by this Apache 2.0
 grant.

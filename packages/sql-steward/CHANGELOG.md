@@ -105,7 +105,7 @@ lazy imports in safety.py pick up GitHub installs of those in the meantime.
   embedding column, governed like every other tool: PII refusal, result masking
   and audit all apply, and the embedding column is never returned. Configure per
   entity with a `search:` block. Query text is embedded locally via
-  `SQL_STEWARD_EMBED_URL` (Ollama by default), so nothing leaves the building.
+  `SQL_STEWARD_EMBED_URL` (OpenAI-compatible API), so nothing leaves the building.
   PostgreSQL only.
 - **Per-role query budgets.** Set `SQL_STEWARD_QUERY_BUDGET` for a hard cap on
   queries per role per session, refused with `budget_exceeded`. A simple,

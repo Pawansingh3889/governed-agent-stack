@@ -1,17 +1,18 @@
-"""On-prem AI descriptions via Ollama.
+"""AI descriptions via OpenAI-compatible API.
 
 This is the differentiated layer: feed each table's structure + profile +
 sample values to a *local* LLM and get back plain-English descriptions that
-make the catalog searchable and feed a NL->SQL retriever. Local means no
-schema or sample data leaves the machine — the whole point for regulated or
-privacy-sensitive databases.
+make the catalog searchable and feed a NL->SQL retriever. Use an OpenAI-
+compatible endpoint (local proxy like LiteLLM or the real API) so no schema
+or sample data leaves the machine when running on-prem.
 
-``requests`` and a running Ollama are only needed for ``describe_*``; prompt
-building is pure and testable.
+``requests`` and an OpenAI-compatible endpoint are only needed for
+``describe_*``; prompt building is pure and testable.
 """
 from __future__ import annotations
 
 import json
+import os
 
 from schema_scout.model import Table
 
@@ -57,33 +58,41 @@ def build_describe_prompt(table: Table, max_cols: int = 60) -> str:
 
 def describe_table(
     table: Table,
-    model: str = "qwen3:14b",
-    host: str = "http://localhost:11434",
+    model: str = None,
+    host: str = None,
     timeout: int = 120,
 ) -> dict:
-    """Call a local Ollama model and apply the descriptions to ``table``.
+    """Call an OpenAI-compatible model and apply the descriptions to ``table``.
+
+    Args:
+        table: The table to describe.
+        model: Model name (default: OPENAI_MODEL env or gpt-4o).
+        host: Base URL for OpenAI-compatible API (default: OPENAI_BASE_URL env).
+        timeout: Request timeout in seconds.
 
     Returns the parsed dict. On any failure returns {} and leaves the table
     untouched, so a bad/absent model never breaks a catalog run.
     """
-    import requests
+    from openai import OpenAI
+
+    model = model or os.getenv("OPENAI_MODEL", "gpt-4o")
+    api_key = os.getenv("OPENAI_API_KEY", "")
+    base_url = host or os.getenv("OPENAI_BASE_URL")
+
+    client = OpenAI(api_key=api_key, base_url=base_url, timeout=timeout)
 
     prompt = build_describe_prompt(table)
     try:
-        resp = requests.post(
-            f"{host}/api/generate",
-            json={
-                "model": model,
-                "system": _SYSTEM,
-                "prompt": prompt,
-                "stream": False,
-                "format": "json",
-                "options": {"temperature": 0.0},
-            },
-            timeout=timeout,
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": _SYSTEM},
+                {"role": "user", "content": prompt},
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.0,
         )
-        resp.raise_for_status()
-        raw = resp.json().get("response", "{}")
+        raw = response.choices[0].message.content or "{}"
         parsed = json.loads(raw)
     except Exception:
         return {}

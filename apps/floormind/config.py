@@ -1,9 +1,11 @@
 """FloorMind configuration."""
 import os
 
-# LLM
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma3:12b")
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+# LLM (OpenAI-compatible)
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", None)  # set for local proxies (e.g. LiteLLM)
+OPENAI_EMBED_MODEL = os.getenv("OPENAI_EMBED_MODEL", "text-embedding-3-small")
 
 # Database
 # Supports SQLite (demo) and SQL Server (production)
@@ -61,3 +63,8 @@ MCP_DB_PORT = int(os.getenv("MCP_DB_PORT", "9000"))
 MCP_DOC_HOST = os.getenv("MCP_DOC_HOST", "localhost")
 MCP_DOC_PORT = int(os.getenv("MCP_DOC_PORT", "9001"))
 MCP_ENABLED = os.getenv("MCP_ENABLED", "false").lower() == "true"
+
+# dbt Integration
+DBT_ENABLED = os.getenv("FLOORMIND_DBT_ENABLED", "false").lower() == "true"
+DBT_PROJECT_DIR = os.getenv("FLOORMIND_DBT_PROJECT_DIR", "")
+DBT_PROFILE_DIR = os.getenv("FLOORMIND_DBT_PROFILE_DIR", "")
