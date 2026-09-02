@@ -176,23 +176,54 @@ class AlterAddNotNullNoDefault(Rule):
     description = "ALTER TABLE ADD NOT NULL without DEFAULT locks the table"
     multiline = True
 
-    _pattern = Rule._compile(
-        r"\bALTER\s+TABLE\s+\S+\s+ADD\s+(?:COLUMN\s+)?\S+\s+\S+[\s\S]*?\bNOT\s+NULL\b"
-    )
+    _alter_add = Rule._compile(r"\bALTER\s+TABLE\s+\S+\s+ADD\b")
+    _not_null = Rule._compile(r"\bNOT\s+NULL\b")
     _has_default = Rule._compile(r"\bDEFAULT\b")
 
     def check_statement(self, statement: str, start_line: int, file: str) -> Finding | None:
-        if self._pattern.search(statement) and not self._has_default.search(statement):
-            return Finding(
-                rule_id=self.id,
-                severity=self.severity,
-                file=file,
-                line=start_line,
-                message="ALTER TABLE ADD NOT NULL without DEFAULT will lock the table",
-                suggestion=(
-                    "Add a DEFAULT, or split into: ADD nullable + backfill + ALTER COLUMN NOT NULL"
-                ),
-            )
+        cleaned = strip_strings_and_comments(statement)
+        match = self._alter_add.search(cleaned)
+        if not match:
+            return None
+
+        # A single ALTER TABLE can ADD several columns separated by
+        # commas (e.g. "ADD a INT NOT NULL, ADD b INT DEFAULT 5"). Judge
+        # each added column on its own DEFAULT, not the statement as a
+        # whole -- otherwise one column's DEFAULT masks another column
+        # that is genuinely NOT NULL with no default. Split on
+        # depth-0 commas so types like DECIMAL(10,2) aren't split.
+        n = len(cleaned)
+        depth = 0
+        seg_start = match.end()
+        segments = []
+        i = seg_start
+        while i < n:
+            ch = cleaned[i]
+            if ch == "(":
+                depth += 1
+            elif ch == ")":
+                depth = max(depth - 1, 0)
+            elif ch == "," and depth == 0:
+                segments.append((seg_start, cleaned[seg_start:i]))
+                seg_start = i + 1
+            elif ch == ";" and depth == 0:
+                break
+            i += 1
+        segments.append((seg_start, cleaned[seg_start:i]))
+
+        for seg_offset, segment in segments:
+            if self._not_null.search(segment) and not self._has_default.search(segment):
+                line_offset = cleaned[:seg_offset].count("\n")
+                return Finding(
+                    rule_id=self.id,
+                    severity=self.severity,
+                    file=file,
+                    line=start_line + line_offset,
+                    message="ALTER TABLE ADD NOT NULL without DEFAULT will lock the table",
+                    suggestion=(
+                        "Add a DEFAULT, or split into: ADD nullable + backfill + ALTER COLUMN NOT NULL"
+                    ),
+                )
         return None
 
 
@@ -278,6 +309,33 @@ class UpdateFromImplicitJoin(Rule):
     )
     _lateral_pattern = re.compile(r"\s*LATERAL\b", re.IGNORECASE)
 
+    def _find_top_level_from(self, cleaned: str, start: int) -> re.Match | None:
+        """Find the first FROM at paren depth 0, skipping subquery FROMs.
+
+        A FROM inside a subquery in the SET clause (e.g.
+        ``SET col = (SELECT val FROM lookup ...)``) belongs to that
+        subquery, not to the UPDATE's own FROM clause.
+        """
+        depth = 0
+        i = start
+        n = len(cleaned)
+        while i < n:
+            ch = cleaned[i]
+            if ch == "(":
+                depth += 1
+                i += 1
+                continue
+            if ch == ")":
+                depth = max(depth - 1, 0)
+                i += 1
+                continue
+            if depth == 0:
+                match = self._from_pattern.match(cleaned, i)
+                if match:
+                    return match
+            i += 1
+        return None
+
     def check_statement(self, statement: str, start_line: int, file: str) -> Finding | None:
         cleaned = strip_strings_and_comments(statement)
         n = len(cleaned)
@@ -286,10 +344,11 @@ class UpdateFromImplicitJoin(Rule):
         if not update_match:
             return None
 
-        # The FROM clause must come after the UPDATE keyword. A FROM that
-        # appears before UPDATE (e.g. inside a CTE) does not belong to this
-        # UPDATE.
-        from_match = self._from_pattern.search(cleaned, update_match.end())
+        # The FROM clause must come after the UPDATE keyword, at the
+        # statement's own paren depth. A FROM that appears before UPDATE
+        # (e.g. inside a CTE) or nested inside a subquery does not belong
+        # to this UPDATE.
+        from_match = self._find_top_level_from(cleaned, update_match.end())
         if not from_match:
             return None
 

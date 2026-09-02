@@ -72,33 +72,111 @@ def discover_files(
 def _split_statements(content: str) -> list[tuple[int, str]]:
     """Split SQL content into statements with their starting line numbers.
 
-    Returns list of (start_line, statement_text).
+    Splits on every real statement-terminating ``;`` -- including several
+    statements written on a single line -- while ignoring ``;`` inside
+    string literals, line comments, and block comments. A run of blank
+    or comment-only lines before a statement is skipped, matching the
+    line number of the first real token. Returns list of
+    (start_line, statement_text).
     """
     statements: list[tuple[int, str]] = []
-    current: list[str] = []
-    start_line = 1
+    buf: list[str] = []
+    line_no = 1
+    start_line: int | None = None
+    in_string = False
+    in_line_comment = False
+    in_block_comment = False
 
-    for i, line in enumerate(content.splitlines(), 1):
-        stripped = line.strip()
-        if not stripped or stripped.startswith("--"):
-            if not current:
-                start_line = i + 1
-            else:
-                current.append(line)
+    def emit(ch: str) -> None:
+        if start_line is not None:
+            buf.append(ch)
+
+    i = 0
+    n = len(content)
+    while i < n:
+        ch = content[i]
+        nxt = content[i + 1] if i + 1 < n else ""
+
+        if in_line_comment:
+            emit(ch)
+            if ch == "\n":
+                in_line_comment = False
+                line_no += 1
+            i += 1
             continue
 
-        if not current:
-            start_line = i
-        current.append(line)
+        if in_block_comment:
+            if ch == "*" and nxt == "/":
+                emit(ch)
+                emit(nxt)
+                i += 2
+                continue
+            emit(ch)
+            if ch == "\n":
+                line_no += 1
+            i += 1
+            continue
 
-        if stripped.endswith(";"):
-            statements.append((start_line, "\n".join(current)))
-            current = []
-            start_line = i + 1
+        if in_string:
+            if ch == "'" and nxt == "'":
+                emit(ch)
+                emit(nxt)
+                i += 2
+                continue
+            emit(ch)
+            if ch == "'":
+                in_string = False
+            elif ch == "\n":
+                line_no += 1
+            i += 1
+            continue
 
-    # Handle last statement without semicolon
-    if current:
-        statements.append((start_line, "\n".join(current)))
+        if ch == "-" and nxt == "-":
+            in_line_comment = True
+            emit(ch)
+            i += 1
+            continue
+
+        if ch == "/" and nxt == "*":
+            in_block_comment = True
+            emit(ch)
+            i += 1
+            continue
+
+        if ch == "'":
+            in_string = True
+            if start_line is None:
+                start_line = line_no
+            buf.append(ch)
+            i += 1
+            continue
+
+        if ch == ";":
+            if start_line is not None:
+                buf.append(ch)
+                statements.append((start_line, "".join(buf)))
+                buf = []
+                start_line = None
+            i += 1
+            continue
+
+        if ch == "\n":
+            emit(ch)
+            line_no += 1
+            i += 1
+            continue
+
+        if ch.strip():
+            if start_line is None:
+                start_line = line_no
+            buf.append(ch)
+        else:
+            emit(ch)
+        i += 1
+
+    # Handle last statement without a terminating semicolon
+    if buf and "".join(buf).strip() and start_line is not None:
+        statements.append((start_line, "".join(buf)))
 
     return statements
 

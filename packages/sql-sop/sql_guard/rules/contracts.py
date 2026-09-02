@@ -304,6 +304,14 @@ class UnmappedForeignKey(ContractRule):
 
         for join_match in self._join_on_block.finditer(statement):
             on_body = join_match.group(1)
+
+            # A compound ON clause can AND together the real join key
+            # with an unrelated filter predicate between the same two
+            # tables (e.g. "ON o.customer_id = c.id AND o.status =
+            # c.preferred_status"). Only the join key needs an FK, so
+            # group equalities by the table pair and require just one
+            # FK-resolving equality per pair, not every equality.
+            pairs: dict[tuple[str, str], list[tuple[str, str, str, str, str, str]]] = {}
             for eq in self._equality.finditer(on_body):
                 left_alias, left_col = eq.group(1).lower(), eq.group(2).lower()
                 right_alias, right_col = eq.group(3).lower(), eq.group(4).lower()
@@ -321,12 +329,19 @@ class UnmappedForeignKey(ContractRule):
                 ):
                     continue
 
-                # Either column may declare the FK; check both directions.
-                if self._fk_resolves(left_table, left_col, right_table, right_col):
-                    continue
-                if self._fk_resolves(right_table, right_col, left_table, left_col):
+                key = tuple(sorted((left_table, right_table)))
+                pairs.setdefault(key, []).append(
+                    (left_alias, left_col, left_table, right_alias, right_col, right_table)
+                )
+
+            for equalities in pairs.values():
+                if any(
+                    self._fk_resolves(lt, lc, rt, rc) or self._fk_resolves(rt, rc, lt, lc)
+                    for (_, lc, lt, _, rc, rt) in equalities
+                ):
                     continue
 
+                left_alias, left_col, _, right_alias, right_col, _ = equalities[0]
                 return Finding(
                     rule_id=self.id,
                     severity=self.severity,

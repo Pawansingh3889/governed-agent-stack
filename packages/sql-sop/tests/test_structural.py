@@ -142,6 +142,25 @@ class TestDeeplyNestedSubquery:
         result = DeeplyNestedSubquery().check_statement(sql, 1, "test.sql")
         assert result is None
 
+    def test_nested_function_calls_are_not_counted_as_subqueries(self) -> None:
+        # Plain function-call parens nest just as deeply as subqueries
+        # but contain no SELECT, so they must not trip this rule.
+        sql = "SELECT COALESCE(NULLIF(TRIM(UPPER(SUBSTRING(col,1,5))),''),'x') FROM t"
+        result = DeeplyNestedSubquery().check_statement(sql, 1, "test.sql")
+        assert result is None
+
+    def test_real_subquery_nested_inside_function_call_still_detected(self) -> None:
+        # A genuine subquery buried inside otherwise-uncounted function
+        # parens must still be picked up.
+        sql = (
+            "SELECT COALESCE("
+            "(SELECT (SELECT (SELECT MAX(id) FROM a) FROM b) FROM c), 0"
+            ") FROM t"
+        )
+        result = DeeplyNestedSubquery().check_statement(sql, 1, "test.sql")
+        assert result is not None
+        assert result.rule_id == "S002"
+
 
 class TestUnusedCTE:
     def test_used_cte_passes(self) -> None:
@@ -160,3 +179,16 @@ class TestUnusedCTE:
         sql = "SELECT * FROM orders"
         result = UnusedCTE().check_statement(sql, 1, "test.sql")
         assert result is None
+
+    def test_cte_referenced_only_by_a_later_chained_cte_passes(self) -> None:
+        # `a` is used by `b`, not by the final SELECT -- a very common
+        # chained-CTE pattern that must not be flagged as unused.
+        sql = "WITH a AS (SELECT * FROM t1), b AS (SELECT * FROM a) SELECT * FROM b"
+        result = UnusedCTE().check_statement(sql, 1, "test.sql")
+        assert result is None
+
+    def test_first_of_two_ctes_unused_still_detected(self) -> None:
+        sql = "WITH a AS (SELECT 1), b AS (SELECT * FROM t) SELECT * FROM b"
+        result = UnusedCTE().check_statement(sql, 1, "test.sql")
+        assert result is not None
+        assert result.rule_id == "S003"

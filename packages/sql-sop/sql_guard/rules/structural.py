@@ -17,6 +17,7 @@ from sql_guard.rules.base import Finding, Rule, strip_strings_and_comments
 try:
     import sqlparse
     from sqlparse.sql import Parenthesis
+    from sqlparse.tokens import DML
 
     HAS_SQLPARSE = True
 except ImportError:
@@ -168,12 +169,26 @@ class DeeplyNestedSubquery(Rule):
             pass
         return None
 
+    def _is_subquery(self, paren) -> bool:
+        """True if this Parenthesis wraps a SELECT (a real subquery).
+
+        Plain function-call/grouping parens, e.g.
+        ``COALESCE(NULLIF(TRIM(...))))``, should not count toward
+        subquery nesting depth even though they nest just as deeply.
+        """
+        for tok in paren.tokens:
+            if tok.ttype is DML and tok.normalized.upper() == "SELECT":
+                return True
+            if hasattr(tok, "tokens") and self._is_subquery(tok):
+                return True
+        return False
+
     def _max_paren_depth(self, token, depth: int = 0) -> int:
-        """Recursively find maximum parenthesis nesting depth."""
+        """Recursively find maximum subquery nesting depth."""
         max_d = depth
         if hasattr(token, "tokens"):
             for t in token.tokens:
-                if isinstance(t, Parenthesis):
+                if isinstance(t, Parenthesis) and self._is_subquery(t):
                     max_d = max(max_d, self._max_paren_depth(t, depth + 1))
                 else:
                     max_d = max(max_d, self._max_paren_depth(t, depth))
@@ -210,15 +225,14 @@ class UnusedCTE(Rule):
         if not cte_names:
             return None
 
-        # Find the main query (everything after the last CTE closing paren)
-        # Simple heuristic: text after the last top-level SELECT
-        parts = re.split(r"\)\s*SELECT\b", statement, flags=re.IGNORECASE)
-        if len(parts) < 2:
-            return None
-        main_query = parts[-1].upper()
-
+        # A used CTE name appears at least once beyond its own
+        # declaration -- either in the final query or (for chained
+        # CTEs) in a later CTE's body. Checking "does it appear again
+        # anywhere in the statement" avoids assuming CTEs are only ever
+        # referenced from the final SELECT.
         for name in cte_names:
-            if name.upper() not in main_query:
+            name_pattern = re.compile(r"\b" + re.escape(name) + r"\b", re.IGNORECASE)
+            if len(name_pattern.findall(statement)) <= 1:
                 return Finding(
                     rule_id=self.id,
                     severity=self.severity,

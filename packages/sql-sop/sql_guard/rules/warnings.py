@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from itertools import pairwise
 
 from sql_guard.rules.base import Finding, Rule, strip_strings_and_comments
 
@@ -191,11 +192,15 @@ class HavingWithoutGroupBy(Rule):
         having_match = self._having.search(statement)
         if not having_match:
             return None
+        # A GROUP BY belongs to this HAVING if it sits at the same paren
+        # nesting level -- not necessarily depth 0, since HAVING/GROUP BY
+        # can both be nested inside a derived table.
+        having_depth = self._paren_depth(statement[: having_match.start()])
         group_by_match = next(
             (
                 match
                 for match in self._group_by.finditer(statement[: having_match.start()])
-                if self._paren_depth(statement[: match.start()]) == 0
+                if self._paren_depth(statement[: match.start()]) == having_depth
             ),
             None,
         )
@@ -263,6 +268,12 @@ class MixedCaseKeywords(Rule):
         "HAVING",
         "LIMIT",
     ]
+    # Whole-word match per keyword so identifiers that merely contain a
+    # keyword as a substring (deleted_at, updated_at) aren't mistaken
+    # for a lowercase keyword usage.
+    _keyword_patterns = [
+        (kw, Rule._compile(r"\b" + kw.replace(" ", r"\s+") + r"\b")) for kw in _keywords
+    ]
 
     def check_line(self, line: str, line_number: int, file: str) -> Finding | None:
         stripped = line.strip()
@@ -270,11 +281,13 @@ class MixedCaseKeywords(Rule):
             return None
         has_upper = False
         has_lower = False
-        for kw in self._keywords:
-            if kw in stripped:
-                has_upper = True
-            if kw.lower() in stripped and kw not in stripped:
-                has_lower = True
+        for kw, pattern in self._keyword_patterns:
+            for m in pattern.finditer(stripped):
+                word = m.group(0)
+                if word == kw:
+                    has_upper = True
+                elif word == kw.lower():
+                    has_lower = True
         if has_upper and has_lower:
             return Finding(
                 rule_id=self.id,
@@ -459,23 +472,40 @@ class OrAcrossColumns(Rule):
     description = "OR across different columns often defeats single-column indexes"
     multiline = True
 
-    # Two equality predicates joined by OR where the column names differ.
-    # Conservative: we only flag when both sides are simple `col = literal`.
-    _pattern = Rule._compile(
-        r"\bWHERE\b[^;]*?\b(\w+)\s*=\s*\S+\s+OR\s+(\w+)\s*=\s*\S+",
-    )
+    # Conservative: we only look at simple `col = literal` predicates.
+    _where_pattern = Rule._compile(r"\bWHERE\b")
+    _or_pattern = Rule._compile(r"\bOR\b")
+    _eq_column_pattern = Rule._compile(r"^\s*(\w+)\s*=\s*\S+")
 
     def check_statement(self, statement: str, start_line: int, file: str) -> Finding | None:
-        m = self._pattern.search(statement)
-        if m and m.group(1).lower() != m.group(2).lower():
-            return Finding(
-                rule_id=self.id,
-                severity=self.severity,
-                file=file,
-                line=start_line,
-                message=f"OR across columns ({m.group(1)} / {m.group(2)}) often defeats indexes",
-                suggestion="Consider rewriting as UNION ALL of two indexed queries",
-            )
+        where_match = self._where_pattern.search(statement)
+        if not where_match:
+            return None
+        clause = statement[where_match.end() :].split(";", 1)[0]
+
+        # Every OR-joined predicate in the WHERE clause, not just the
+        # first pair -- otherwise a leading same-column pair (a = 1 OR
+        # a = 2) hides a later cross-column OR (OR b = 3) later in the
+        # same clause.
+        parts = self._or_pattern.split(clause)
+        if len(parts) < 2:
+            return None
+
+        columns: list[str | None] = []
+        for part in parts:
+            m = self._eq_column_pattern.match(part.strip())
+            columns.append(m.group(1) if m else None)
+
+        for left, right in pairwise(columns):
+            if left and right and left.lower() != right.lower():
+                return Finding(
+                    rule_id=self.id,
+                    severity=self.severity,
+                    file=file,
+                    line=start_line,
+                    message=f"OR across columns ({left} / {right}) often defeats indexes",
+                    suggestion="Consider rewriting as UNION ALL of two indexed queries",
+                )
         return None
 
 
@@ -621,7 +651,10 @@ class CaseWithoutElse(Rule):
     description = "CASE without ELSE returns NULL for unmatched rows"
     multiline = True
 
-    _case_keyword = Rule._compile(r"\b(CASE|END|ELSE)\b")
+    # A real closing END is never immediately followed by THEN -- THEN
+    # only ever follows WHEN. So "... < end THEN ..." is a bare column
+    # reference named `end`, not the CASE's terminator, and is excluded.
+    _case_keyword = Rule._compile(r"\bCASE\b|\bELSE\b|\bEND\b(?!\s+THEN\b)")
 
     def check_statement(self, statement: str, start_line: int, file: str) -> Finding | None:
         # Walk CASE/ELSE/END tokens with a depth-aware stack. Each CASE
@@ -630,7 +663,7 @@ class CaseWithoutElse(Rule):
         # CASE with no ELSE still fires even if an inner one has ELSE.
         stack: list[bool] = []  # one entry per open CASE; True if ELSE seen
         for match in self._case_keyword.finditer(statement):
-            word = match.group(1).upper()
+            word = match.group(0).upper()
             if word == "CASE":
                 stack.append(False)
             elif word == "ELSE":

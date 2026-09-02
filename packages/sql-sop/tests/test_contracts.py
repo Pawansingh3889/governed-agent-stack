@@ -276,6 +276,25 @@ class TestC005UnmappedForeignKey:
         sql = "SELECT * FROM orders o JOIN customers c ON o.id = c.id;"
         assert _stmt(rule, sql) is None
 
+    def test_supplementary_filter_in_compound_on_does_not_need_its_own_fk(self, contract):
+        # customer_id -> id is the real, declared join key. The AND'd
+        # `o.status = c.name` is a supplementary filter on the same
+        # table pair, not a second join key -- it must not be flagged
+        # just because it lacks its own FK declaration.
+        rule = UnmappedForeignKey(contract=contract)
+        sql = "SELECT * FROM orders o JOIN customers c ON o.customer_id = c.id AND o.status = c.name;"
+        assert _stmt(rule, sql) is None
+
+    def test_compound_on_still_flags_when_no_equality_resolves(self, contract):
+        # Neither equality between orders and customers resolves via a
+        # declared FK -- the join is genuinely unkeyed and must still
+        # be flagged.
+        rule = UnmappedForeignKey(contract=contract)
+        sql = "SELECT * FROM orders o JOIN customers c ON o.id = c.id AND o.status = c.name;"
+        finding = _stmt(rule, sql)
+        assert finding is not None
+        assert finding.rule_id == "C005"
+
 
 def test_build_contract_rules_with_contract_returns_all(contract):
     rules = build_contract_rules(contract)
