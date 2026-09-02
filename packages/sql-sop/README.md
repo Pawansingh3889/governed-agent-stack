@@ -180,6 +180,7 @@ sql-sop list-rules                       # show every registered rule
 | E006 | `update-without-where` | `UPDATE orders SET status = 'x';` -- overwrites every row |
 | E007 | `alter-add-not-null-no-default` | `ALTER TABLE t ADD c INT NOT NULL;` -- locks table for full rewrite |
 | E008 | `drop-column` | `ALTER TABLE t DROP COLUMN c;` -- irreversible, breaks subscribers |
+| E009 | `update-from-without-join` | `UPDATE t SET x=1 FROM a, b` -- comma-separated tables silently create a Cartesian product |
 
 ### Warnings (advisory by default)
 
@@ -205,6 +206,7 @@ sql-sop list-rules                       # show every registered rule
 | W018 | `or-across-columns` | `WHERE a = 1 OR b = 2` -- defeats single-column indexes |
 | W019 | `count-distinct-unbounded` | `COUNT(DISTINCT col)` with no WHERE / GROUP BY / LIMIT -- full sort + distinct over the whole table |
 | W020 | `truncate-table` | `TRUNCATE TABLE staging;` -- bypasses triggers, resets identity |
+| W021 | `having-without-group-by` | `HAVING count(*) > 1` without `GROUP BY` -- legal but usually a mistake |
 | W022 | `cross-join-explicit` | `FROM products CROSS JOIN regions` -- Cartesian product, confirm intent |
 | W023 | `scalar-udf-in-where` | `WHERE dbo.fn_X(col) = 1` -- row-by-row predicate evaluation |
 | W024 | `select-distinct-suspicious` | `SELECT DISTINCT a, b FROM x JOIN y ON ...` -- DISTINCT often masks a missing join condition or GROUP BY |
