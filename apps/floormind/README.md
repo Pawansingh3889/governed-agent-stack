@@ -42,7 +42,7 @@ Factory managers and shift leads need answers from production data: yield, waste
 - **Ask in English, get answers in seconds**: no SQL knowledge required
 - **Runs entirely on your machine**: no data leaves the factory network
 - **SQL injection protection**: validates every query before execution
-- **Covers 7 business areas**: production, waste, orders, compliance, staff, suppliers, traceability
+- **Covers 6 business domains**: production, traceability, orders, compliance, staff, stock
 - **Smart alerts**: flags yield drops, temperature breaches, and overtime automatically
 - **Domain-aware**: loads compliance, production, and waste rules at runtime for context-aware answers
 
@@ -71,7 +71,7 @@ The 2026 agentic-AI reports (McKinsey, Deloitte, and others) keep landing on the
 
 Manufacturing teams query data through Excel exports and IT requests. FloorMind lets any operator ask the database in English: offline, on-prem, no API keys.
 
-It works against a manufacturing schema mapped into business domains (production, traceability, orders, compliance, staff, suppliers, waste), so each question is routed to the right tables before the LLM ever sees them.
+It works against a manufacturing schema mapped into business domains (production, traceability, orders, compliance, staff, stock), so each question is routed to the right tables before the LLM ever sees them.
 
 ---
 
@@ -118,7 +118,7 @@ User asks: "What was yesterday's waste?"
       │
       ▼
 ┌─────────────┐     ┌──────────────────┐
-│ Query Library│────▶│ 10 pre-built SQL │──── Match? ───▶ Execute instantly
+│ Query Library│────▶│ 17 pre-built SQL │──── Match? ───▶ Execute instantly
 │ (fast path)  │     │ patterns          │
 └─────────────┘     └──────────────────┘
       │ No match
@@ -315,13 +315,13 @@ production:
 # Also: orders, staff, stock, compliance
 ```
 
-> **Schema mapping:** FloorMind maps a manufacturing schema into 6 business domains (production, traceability, orders, compliance, staff, suppliers), with pre-built SQL queries and production push alerts. Temperature data is queryable for read-only reporting; the certified monitoring loop remains authoritative for compliance.
+> **Schema mapping:** FloorMind maps a manufacturing schema into 6 business domains (production, traceability, orders, compliance, staff, stock), with pre-built SQL queries and production push alerts. Temperature data is queryable for read-only reporting; the certified monitoring loop remains authoritative for compliance.
 
 > The schema can model a batch-centric run structure (one batch feeding one run that produces several products), and the registry maps the tables to business domains for efficient NL-to-SQL generation.
 
 ## Production Queries
 
-8 pre-built production queries for instant results (no LLM round-trip):
+8 documented production queries for instant results (no LLM round-trip). These are the business questions; the library matches them with 17 regex patterns, since several phrasings map to one query:
 
 | # | Query | Description |
 |---|---|---|
@@ -401,7 +401,7 @@ User Question (plain English)
     v
 [LangGraph Agent] --- 6-node state graph
     |
-    +---> [Query Library] --- 8 pre-built queries (fast path)
+    +---> [Query Library] --- 17 pre-built patterns (fast path)
     |
     +---> [Schema Registry] --- 6 domains, 19 tables
     |
@@ -462,7 +462,7 @@ question -> [detect_domain] -> [check_library] --match--> [validate_sql] -> [exe
 | Node | Purpose |
 |---|---|
 | `detect_domain` | Maps the question to one of 6 business domains via keyword scoring |
-| `check_library` | Checks 18 pre-built regex patterns for a fast-path match (no LLM needed) |
+| `check_library` | Checks 17 pre-built regex patterns for a fast-path match (no LLM needed) |
 | `generate_sql` | LLM generates SQL from the question and domain-scoped schema |
 | `validate_sql` | Safety gate -- only SELECT/WITH allowed, blocks dangerous keywords |
 | `execute_sql` | Runs the validated query via SQLAlchemy (read-only) |

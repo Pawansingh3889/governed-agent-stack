@@ -149,7 +149,7 @@
         <pre><code><span class="gray"># User types a question</span>
 <span class="green">"How much of Product A did we process this week?"</span>
 
-<span class="gray"># Step 1: Query Library checks 10 pre-built patterns</span>
+<span class="gray"># Step 1: Query Library checks 17 pre-built patterns</span>
 <span class="blue">Match found → uses tested SQL (no LLM needed)</span>
 
 <span class="gray"># Step 2: If no match → Schema Registry selects relevant tables</span>
@@ -196,7 +196,7 @@ traceability:
     Products: ProductCode, ProductName, Species, Allergens
     SalesOrders: OrderID, CustomerCode, QuantityKg, DeliveryDate
 
-<span class="gray"># 7 domains: traceability, production, orders, temperature, staff, stock, compliance</span>
+<span class="gray"># 6 domains: traceability, production, orders, staff, stock, compliance</span>
 <span class="gray"># Each domain maps to 2-5 tables instead of 147</span></code></pre>
     </div>
 </section>

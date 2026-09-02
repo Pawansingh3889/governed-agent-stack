@@ -48,7 +48,7 @@ We are actively looking for contributions in these areas:
 
 ### High Priority
 - **Docker deployment** — Dockerfile + docker-compose with API + frontend services
-- **More pre-built SQL patterns** — Expand the query library beyond 10 patterns ([#2](https://github.com/Pawansingh3889/FloorMind/issues/2))
+- **More pre-built SQL patterns** — Expand the query library beyond 17 patterns ([#2](https://github.com/Pawansingh3889/FloorMind/issues/2))
 - **PostgreSQL support** — Add PostgreSQL dialect alongside SQLite and SQL Server ([#3](https://github.com/Pawansingh3889/FloorMind/issues/3))
 
 ### Medium Priority
