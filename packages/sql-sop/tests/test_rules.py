@@ -168,6 +168,19 @@ class TestErrorRules:
         e009 = [f for f in result.findings if f.rule_id == "E009"]
         assert len(e009) == 1
 
+    def test_e009_subquery_from_in_set_clause_does_not_hide_real_join(self, tmp_path) -> None:
+        # A FROM inside a subquery in the SET clause must not be mistaken
+        # for the UPDATE's own FROM clause -- the real comma join further
+        # on is still dangerous and must be flagged.
+        sql = tmp_path / "subquery_set.sql"
+        sql.write_text(
+            "UPDATE t1 SET col = (SELECT val FROM lookup WHERE lookup.id = t1.id) "
+            "FROM t1, t2 WHERE t1.id = t2.id;\n"
+        )
+        result = check([str(sql)])
+        e009 = [f for f in result.findings if f.rule_id == "E009"]
+        assert len(e009) == 1
+
 
 # ---------------------------------------------------------------------------
 # Warning rules
@@ -337,6 +350,63 @@ class TestWarningRules:
         rule = CaseWithoutElse()
         proc = "BEGIN\n  SELECT 1;\nEND;"
         assert rule.check_statement(proc, 1, "test.sql") is None
+
+    def test_w014_bare_end_column_reference_not_mistaken_for_terminator(self) -> None:
+        # A column literally named `end` inside the WHEN condition must
+        # not be misread as the CASE's closing END -- it is never
+        # immediately followed by THEN, which only ever follows WHEN.
+        from sql_guard.rules.warnings import CaseWithoutElse
+
+        rule = CaseWithoutElse()
+        sql = "SELECT CASE WHEN start < end THEN 1 ELSE 0 END AS flag FROM ranges;"
+        assert rule.check_statement(sql, 1, "test.sql") is None
+
+
+class TestMixedCaseKeywords:
+    def test_flags_genuine_mixed_case(self) -> None:
+        from sql_guard.rules.warnings import MixedCaseKeywords
+
+        rule = MixedCaseKeywords()
+        finding = rule.check_line("select id FROM customers;", 1, "test.sql")
+        assert finding is not None
+        assert finding.rule_id == "W008"
+
+    def test_ignores_identifier_containing_keyword_substring(self) -> None:
+        # `deleted_at` contains the substring "delete" but is not a use
+        # of the DELETE keyword -- consistently upper-case SQL around it
+        # must not be flagged as mixed case.
+        from sql_guard.rules.warnings import MixedCaseKeywords
+
+        rule = MixedCaseKeywords()
+        sql = "SELECT id, name FROM customers WHERE deleted_at IS NULL;"
+        assert rule.check_line(sql, 1, "test.sql") is None
+
+    def test_consistent_lowercase_passes(self) -> None:
+        from sql_guard.rules.warnings import MixedCaseKeywords
+
+        rule = MixedCaseKeywords()
+        sql = "select id from customers;"
+        assert rule.check_line(sql, 1, "test.sql") is None
+
+
+class TestOrAcrossColumns:
+    def test_flags_when_first_pair_same_column_but_later_pair_differs(self) -> None:
+        # Only checking the first OR pair hid a later cross-column OR
+        # in the same clause.
+        from sql_guard.rules.warnings import OrAcrossColumns
+
+        rule = OrAcrossColumns()
+        sql = "SELECT * FROM t WHERE a = 1 OR a = 2 OR b = 3;"
+        finding = rule.check_statement(sql, 1, "test.sql")
+        assert finding is not None
+        assert finding.rule_id == "W018"
+
+    def test_passes_when_all_or_pairs_are_same_column(self) -> None:
+        from sql_guard.rules.warnings import OrAcrossColumns
+
+        rule = OrAcrossColumns()
+        sql = "SELECT * FROM t WHERE a = 1 OR a = 2 OR a = 3;"
+        assert rule.check_statement(sql, 1, "test.sql") is None
 
 
 # ---------------------------------------------------------------------------

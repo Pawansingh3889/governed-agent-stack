@@ -51,6 +51,41 @@ def test_e007_passes_when_column_is_nullable():
     assert _stmt(rule, "ALTER TABLE orders ADD status VARCHAR(20) NULL;") is None
 
 
+def test_e007_flags_column_without_default_even_when_sibling_column_has_one():
+    # A DEFAULT anywhere in the statement previously suppressed the
+    # finding for every added column. region_id has no default and will
+    # still lock the table even though status does.
+    rule = AlterAddNotNullNoDefault()
+    finding = _stmt(
+        rule,
+        "ALTER TABLE orders ADD region_id INT NOT NULL, "
+        "ADD status VARCHAR(10) DEFAULT 'pending';",
+    )
+    assert finding is not None
+    assert finding.rule_id == "E007"
+
+
+def test_e007_passes_when_every_added_column_has_its_own_default():
+    rule = AlterAddNotNullNoDefault()
+    assert (
+        _stmt(
+            rule,
+            "ALTER TABLE orders ADD region_id INT NOT NULL DEFAULT 0, "
+            "ADD status VARCHAR(10) DEFAULT 'pending';",
+        )
+        is None
+    )
+
+
+def test_e007_comma_in_column_type_does_not_break_column_split():
+    # DECIMAL(10,2) has a comma inside parens -- it must not be mistaken
+    # for the column-separating comma.
+    rule = AlterAddNotNullNoDefault()
+    finding = _stmt(rule, "ALTER TABLE orders ADD amount DECIMAL(10,2) NOT NULL;")
+    assert finding is not None
+    assert finding.rule_id == "E007"
+
+
 # E008 drop-column ------------------------------------------------------------
 
 
