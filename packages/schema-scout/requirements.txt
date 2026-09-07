@@ -1,4 +1,4 @@
-pyodbc>=5.0
-pandas>=2.0
-requests>=2.31
-pytest>=8.0
+pyodbc>=5.3.0
+pandas>=3.0.5
+requests>=2.34.2
+pytest>=9.1.1
